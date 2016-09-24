@@ -1,4 +1,9 @@
-Version 1.0
+Version 1.0.1
+-----------
+
+    - Minor packaging fixes
+
+Version 1.0.0
 -----------
 
     - Initial version, includes:

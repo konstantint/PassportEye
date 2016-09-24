@@ -18,9 +18,13 @@ a situation not accounted for too well by the current algorithm.
 Installation
 ------------
 
-If you have obtained this package in source form, you can install it using the standard approach of doing::
+The simplest way to install the package is via ``easy_install`` or
+``pip``::
 
-    $ python setup.py install
+    $ pip install PassportEye
+
+Note that `PassportEye` depends on `numpy`, `scipy`, `matplotlib` and `scikit-image`, among other things. The installation of those requirements, although automatic,
+may take time or fail sometimes for various reasons (e.g. lack of necessary libraries). If this happens, consider installing the dependencies explicitly from the binary packages, such as those provided by the OS distribution or the "wheel" packages. Another convenient option is to use a Python distribution with pre-packaged `numpy`/`scipy`/`matplotlib` binaries (Anaconda Python being a great choice at the moment).
 
 In addition, you must have the `Tesseract OCR <https://github.com/tesseract-ocr>`_ installed and added to the system path: the ``tesseract`` tool must be 
 accessible at the command line.
@@ -72,11 +76,11 @@ which is used in the algorithm to extract ROIs alongside the boxes corresponding
 Development
 -----------
 
-If you plan to develop or debug the package, consider installing it by using::
+If you plan to develop or debug the package, consider installing it by running::
 
     $ python setup.py develop
 
-rather than ``setup.py install``. The package contains a basic set of smoke tests. To run those you should first make sure you have
+from within the source distribution. The package contains a basic set of smoke tests. To run those you should first make sure you have
 `pytest` installed::
 
     $ pip install pytest
