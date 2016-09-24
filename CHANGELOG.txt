@@ -1,0 +1,10 @@
+Version 1.0
+-----------
+
+    - Initial version, includes:
+       - Dataflow pipeline-based processing
+       - ROI detection using morphological operations ("Boone transform")
+       - ROI represented as a rotated box, extracted from contours via PCA.
+       - OCR via Google Tesseract. OCR is attempted via several filters.
+       - mrz command line tool.
+       - evaluate_mrz command line tool
