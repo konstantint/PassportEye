@@ -393,7 +393,7 @@ class MRZOCRCleaner(object):
         #   N  - numeric+<
         #   *  - alpha+num+<
 
-        TD1 = ['aA' + 'A'*3 + '*'*9 + 'N' + '*'*15,
+        TD1 = ['a*' + 'A'*3 + '*'*9 + 'N' + '*'*15,
                'n'*7 + 'A' + 'n'*7 + 'A'*3 + '*'*11 + 'n',
                'A'*30]
         TD2 = ['a' + 'A'*35,
