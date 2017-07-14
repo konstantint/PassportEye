@@ -1,7 +1,8 @@
-Version 1.0.1
+Version 1.0.2
 -----------
 
     - Minor packaging fixes
+    - PR#2 (https://github.com/konstantint/PassportEye/pull/2)
 
 Version 1.0.0
 -----------
