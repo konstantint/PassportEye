@@ -4,3 +4,5 @@
 /*.egg-info
 /**/__pycache__/
 *.pyc
+/.cache
+/_docs

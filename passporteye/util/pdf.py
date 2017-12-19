@@ -5,12 +5,15 @@ Author: Konstantin Tretyakov
 License: MIT
 '''
 
-## TODO: This uses PDFMiner for Python2. PDFMiner for Python3 has a slightly different interface
-## hence the code might need to be updated slightly.
+import sys
+PY2 = sys.version_info.major == 2
 
-from pdfminer.pdfparser import PDFParser
-from pdfminer.pdfdocument import PDFDocument
-from pdfminer.pdfpage import PDFPage
+if PY2:
+    from pdfminer.pdfparser import PDFParser
+    from pdfminer.pdfdocument import PDFDocument
+    from pdfminer.pdfpage import PDFPage
+else:
+    from pdfminer.pdfparser import PDFParser, PDFDocument, PDFPage
 from pdfminer.pdfinterp import PDFResourceManager
 from pdfminer.pdfinterp import PDFPageInterpreter
 from pdfminer.converter import PDFPageAggregator
@@ -33,11 +36,18 @@ def extract_first_jpeg_in_pdf(fstream):
     :return: String, containing the whole contents of the JPEG image or None if extraction failed.
     """
     parser = PDFParser(fstream)
-    document = PDFDocument(parser)
+    if PY2:
+        document = PDFDocument(parser)
+    else:
+        document = PDFDocument()
+        parser.set_document(document)
+        document.set_parser(parser)
+        document.initialize('')
     rsrcmgr = PDFResourceManager()
     device = PDFPageAggregator(rsrcmgr)
     interpreter = PDFPageInterpreter(rsrcmgr, device)
-    for page in PDFPage.create_pages(document):
+    pages = PDFPage.create_pages(document) if PY2 else document.get_pages()
+    for page in pages:
         interpreter.process_page(page)
         layout = device.result
         for el in layout:
@@ -51,7 +61,7 @@ def extract_first_jpeg_in_pdf(fstream):
                         except:
                             # Failed to decode (seems to happen nearly always - there's probably a bug in PDFMiner), oh well...
                             imdata = im.stream.get_rawdata()
-                        if imdata is not None and imdata.startswith('\xff\xd8\xff\xe0'):
+                        if imdata is not None and imdata.startswith(b'\xff\xd8\xff\xe0'):
                             return imdata
 
     return None

@@ -259,7 +259,7 @@ class MRZ(object):
         self.valid_line_lengths = [len_a == 30, len_b == 30, len_c == 30]
         self.valid_misc = [a[0] in 'IAC']
         self.valid_score = 10*sum(self.valid_check_digits) + sum(self.valid_line_lengths) + sum(self.valid_misc) + 1
-        self.valid_score = 100*self.valid_score/(40+3+1+1)
+        self.valid_score = 100*self.valid_score//(40+3+1+1)
         self.valid_number, self.valid_date_of_birth, self.valid_expiration_date, self.valid_composite = self.valid_check_digits
         return self.valid_score == 100
 
@@ -295,7 +295,7 @@ class MRZ(object):
         self.valid_line_lengths = [len_a == 36, len_b == 36]
         self.valid_misc = [a[0] in 'ACI']
         self.valid_score = 10*sum(self.valid_check_digits) + sum(self.valid_line_lengths) + sum(self.valid_misc) +1
-        self.valid_score = 100*self.valid_score/(40+2+1+1)
+        self.valid_score = 100*self.valid_score//(40+2+1+1)
         self.valid_number, self.valid_date_of_birth, self.valid_expiration_date, self.valid_composite = self.valid_check_digits
         return self.valid_score == 100
 
@@ -334,7 +334,7 @@ class MRZ(object):
         self.valid_line_lengths = [len_a == 44, len_b == 44]
         self.valid_misc = [a[0] in 'P']
         self.valid_score = 10*sum(self.valid_check_digits) + sum(self.valid_line_lengths) + sum(self.valid_misc) +1
-        self.valid_score = 100*self.valid_score/(50+2+1+1)
+        self.valid_score = 100*self.valid_score//(50+2+1+1)
         self.valid_number, self.valid_date_of_birth, self.valid_expiration_date, self.valid_personal_number, self.valid_composite = self.valid_check_digits
         return self.valid_score == 100
 
@@ -368,7 +368,7 @@ class MRZ(object):
         self.valid_line_lengths = [len_a == length, len_b == length]
         self.valid_misc = [a[0]=='V']
         self.valid_score = 10*sum(self.valid_check_digits) + sum(self.valid_line_lengths) + sum(self.valid_misc) + 1
-        self.valid_score = 100*self.valid_score/(30+2+1+1)
+        self.valid_score = 100*self.valid_score//(30+2+1+1)
         self.valid_number, self.valid_date_of_birth, self.valid_expiration_date = self.valid_check_digits
         return self.valid_score == 100
 

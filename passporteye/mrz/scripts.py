@@ -62,7 +62,7 @@ def evaluate_mrz():
 
     def score_change_type(filename, mrz):
         try:
-            new_score = mrz.valid_score if mrz is not None else 0
+            new_score = valid_score(mrz)
             old_score = int(os.path.basename(filename).split('_')[0])
             schange = new_score - old_score
             return '=' if schange == 0 else ('>' if schange > 0 else '<')
@@ -103,8 +103,8 @@ def evaluate_mrz():
     print("Processed files:   %d" % num_files)
     print("Perfect parses:    %d" % num_perfect)
     print("Invalid parses:    %d" % num_invalid)
-    print("Improved parses:   %d" % len(filter(lambda x: x == '>', score_changes)))
-    print("Worsened parses:   %d" % len(filter(lambda x: x == '<', score_changes)))
+    print("Improved parses:   %d" % len([x for x in score_changes if x == '>']))
+    print("Worsened parses:   %d" % len([x for x in score_changes if x == '<']))
     print("Total score:       %d" % total_score)
     print("Mean score:        %0.2f" % (float(total_score)/num_files))
     print("Mean compute time: %0.2fs" % (total_computation_walltime/num_files))

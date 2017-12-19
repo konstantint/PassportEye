@@ -29,7 +29,7 @@ setup(name='PassportEye',
       long_description=open("README.rst").read(),
       classifiers=[ # Get strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers
         'Development Status :: 4 - Beta',
-        'Programming Language :: Python :: 2',
+        'Programming Language :: Python',
         'Topic :: Scientific/Engineering :: Image Recognition',
         'License :: OSI Approved :: MIT License',
         'Intended Audience :: Developers',
@@ -45,7 +45,8 @@ setup(name='PassportEye',
       packages=find_packages(exclude=['examples', 'tests']),
       include_package_data=True,
       zip_safe=False,
-      install_requires=['pdfminer', 'numpy', 'scipy', 'scikit-image >= 0.12.1', 'scikit-learn', 'matplotlib', 'pytesseract'],
+      install_requires=['numpy', 'scipy', 'scikit-image >= 0.12.1', 'scikit-learn', 'matplotlib', 'pytesseract', 
+                        'pdfminer' if sys.version_info.major == 2 else 'pdfminer3k'],
       entry_points={
           'console_scripts': ['evaluate_mrz=passporteye.mrz.scripts:evaluate_mrz',
                               'mrz=passporteye.mrz.scripts:mrz']

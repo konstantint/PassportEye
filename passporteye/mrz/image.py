@@ -67,7 +67,7 @@ class Scaler(object):
     def __call__(self, img):
         scale_factor = self.max_width/float(img.shape[1])
         if scale_factor <= 1:
-            img_small = transform.rescale(img, scale_factor)
+            img_small = transform.rescale(img, scale_factor, mode='constant')
         else:
             scale_factor = 1.0
             img_small = img
@@ -128,7 +128,7 @@ class MRZBoxLocator(object):
             results.append(rb)
 
         # Next sort and leave only max_boxes largest boxes by area
-        results.sort(lambda x,y: 1 if x.area < y.area else -1)
+        results.sort(key = lambda x: -x.area)
         return self._merge_boxes(results[0:self.max_boxes])
 
     def _are_aligned_angles(self, b1, b2):
@@ -189,7 +189,7 @@ class FindFirstValidMRZ(object):
         if len(mrzs) == 0:
             return None, None, None, None
         else:
-            mrzs.sort(cmp = lambda x,y: x[3].valid_score - y[3].valid_score)
+            mrzs.sort(key = lambda x: x[3].valid_score)
             return mrzs[-1]
 
 
@@ -252,7 +252,7 @@ class BoxToMRZ(object):
         the old mrz."""
         if roi.shape[1] <= 700:
             scale_by = int(1050.0/roi.shape[1] + 0.5)
-            roi_lg = transform.rescale(roi, scale_by, order=filter_order)
+            roi_lg = transform.rescale(roi, scale_by, order=filter_order, mode='constant')
             new_text = ocr(roi_lg)
             new_mrz = MRZ.from_ocr(new_text)
             new_mrz.aux['method'] = 'rescaled(%d)' % filter_order

@@ -8,6 +8,7 @@ License: MIT
 
 from pytesseract import pytesseract
 from scipy.misc import imsave
+import sys
 
 def ocr(img, mrz_mode=True):
     """Runs Tesseract on a given image. Writes an intermediate tempfile and then runs the tesseract command on the image.
@@ -38,7 +39,12 @@ def ocr(img, mrz_mode=True):
         if status:
             errors = pytesseract.get_errors(error_string)
             raise pytesseract.TesseractError(status, errors)
-        f = open(output_file_name)
+        
+        if sys.version_info.major == 3:
+            f = open(output_file_name, encoding='utf-8')
+        else:
+            f = open(output_file_name)
+        
         try:
             return f.read().strip()
         finally:
