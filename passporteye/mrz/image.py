@@ -294,7 +294,8 @@ class TryOtherMaxWidth(object):
         if mrz is None and (__pipeline__['img_binary'].mean() < 0.01 or __pipeline__['img'].mean() > 0.95):
             __pipeline__.replace_component('scaler', Scaler(self.other_max_width))
             new_mrz = __pipeline__['mrz']
-            new_mrz.aux['method'] = new_mrz.aux['method'] + '|max_width(%d)' % self.other_max_width
+            if new_mrz is not None:
+                new_mrz.aux['method'] = new_mrz.aux['method'] + '|max_width(%d)' % self.other_max_width
             mrz = new_mrz
         return mrz
 
