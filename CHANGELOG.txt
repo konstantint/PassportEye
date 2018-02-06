@@ -1,3 +1,8 @@
+Version 1.1.2
+-----------
+
+    - Issue #9, PR#10: Pinned PyTesseract version to 0.1.7 (newer ones are incompatible)
+
 Version 1.1.1
 -----------
 
