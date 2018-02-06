@@ -1,10 +1,15 @@
+Version 1.2.0
+-------------
+
+    - Pinned PyTesseract version to >= 0.2.0
+
 Version 1.1.2
------------
+-------------
 
     - Issue #9, PR#10: Pinned PyTesseract version to 0.1.7 (newer ones are incompatible)
 
 Version 1.1.1
------------
+-------------
 
     - Minor packaging fixes
     - PR#2 (https://github.com/konstantint/PassportEye/pull/2)
@@ -12,7 +17,7 @@ Version 1.1.1
     - Issue #8 (https://github.com/konstantint/PassportEye/issues/8)
 
 Version 1.0.0
------------
+-------------
 
     - Initial version, includes:
        - Dataflow pipeline-based processing
