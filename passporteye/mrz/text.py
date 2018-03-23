@@ -6,6 +6,7 @@ Author: Konstantin Tretyakov
 License: MIT
 '''
 from collections import OrderedDict
+from datetime import datetime
 
 class MRZ(object):
     """
@@ -253,8 +254,8 @@ class MRZ(object):
         self.surname = self.surname.replace('<', ' ').strip()
 
         self.valid_check_digits = [MRZCheckDigit.compute(self.number) == self.check_number,
-                            MRZCheckDigit.compute(self.date_of_birth) == self.check_date_of_birth,
-                            MRZCheckDigit.compute(self.expiration_date) == self.check_expiration_date,
+                            MRZCheckDigit.compute(self.date_of_birth) == self.check_date_of_birth and MRZ._check_date(self.date_of_birth),
+                            MRZCheckDigit.compute(self.expiration_date) == self.check_expiration_date and MRZ._check_date(self.expiration_date),
                             MRZCheckDigit.compute(a[5:30] + b[0:7] + b[8:15] + b[18:29]) == self.check_composite]
         self.valid_line_lengths = [len_a == 30, len_b == 30, len_c == 30]
         self.valid_misc = [a[0] in 'IAC']
@@ -289,8 +290,8 @@ class MRZ(object):
         self.optional1 = b[28:35]
         self.check_composite = b[35]
         self.valid_check_digits = [MRZCheckDigit.compute(self.number) == self.check_number,
-                             MRZCheckDigit.compute(self.date_of_birth) == self.check_date_of_birth,
-                             MRZCheckDigit.compute(self.expiration_date) == self.check_expiration_date,
+                             MRZCheckDigit.compute(self.date_of_birth) == self.check_date_of_birth and MRZ._check_date(self.date_of_birth),
+                             MRZCheckDigit.compute(self.expiration_date) == self.check_expiration_date and MRZ._check_date(self.expiration_date),
                              MRZCheckDigit.compute(b[0:10] + b[13:20] + b[21:35]) == self.check_composite]
         self.valid_line_lengths = [len_a == 36, len_b == 36]
         self.valid_misc = [a[0] in 'ACI']
@@ -326,8 +327,8 @@ class MRZ(object):
         self.check_personal_number = b[42]
         self.check_composite = b[43]
         self.valid_check_digits = [MRZCheckDigit.compute(self.number) == self.check_number,
-                             MRZCheckDigit.compute(self.date_of_birth) == self.check_date_of_birth,
-                             MRZCheckDigit.compute(self.expiration_date) == self.check_expiration_date,
+                             MRZCheckDigit.compute(self.date_of_birth) == self.check_date_of_birth and MRZ._check_date(self.date_of_birth),
+                             MRZCheckDigit.compute(self.expiration_date) == self.check_expiration_date and MRZ._check_date(self.expiration_date),
                              MRZCheckDigit.compute(b[0:10] + b[13:20] + b[21:43]) == self.check_composite,
                              ((self.check_personal_number == '<' or self.check_personal_number == '0') and self.personal_number == '<<<<<<<<<<<<<<') # PN is optional
                                 or MRZCheckDigit.compute(self.personal_number) == self.check_personal_number]
@@ -338,6 +339,13 @@ class MRZ(object):
         self.valid_number, self.valid_date_of_birth, self.valid_expiration_date, self.valid_personal_number, self.valid_composite = self.valid_check_digits
         return self.valid_score == 100
 
+    @staticmethod
+    def _check_date(ymd):
+        try:
+            datetime.strptime(ymd, '%y%m%d')
+            return True
+        except ValueError:
+            return False
 
     def _parse_mrv(self, a, b, length=44):
         len_a, len_b = len(a), len(b)
