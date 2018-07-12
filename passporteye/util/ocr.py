@@ -27,7 +27,7 @@ def ocr(img, mrz_mode=True):
         imsave(input_file_name, img)
 
         if mrz_mode:
-            config = "--psm 6 -c tessedit_char_whitelist=ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789>< -c load_system_dawg=F -c load_freq_dawg=F"
+            config = "--psm 6 -c tessedit_char_whitelist=ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789>< -c load_system_dawg=F -c load_freq_dawg=F -l eng+spa+OCRB"
         else:
             config = None
 
