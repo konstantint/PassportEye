@@ -21,17 +21,17 @@ class Loader(object):
     __depends__ = []
     __provides__ = ['img']
 
-    def __init__(self, filename, as_grey=True, pdf_aware=True):
+    def __init__(self, filename, as_gray=True, pdf_aware=True):
         self.filename = filename
-        self.as_grey = as_grey
+        self.as_gray = as_gray
         self.pdf_aware = pdf_aware
 
     def _imread(self, filename):
         """Proxy to skimage.io.imread with some fixes."""
-        img = io.imread(filename, as_grey=self.as_grey)
+        img = io.imread(filename, as_gray=self.as_gray)
         if img is not None and len(img.shape) != 2:
             # The PIL plugin somewhy fails to load some images
-            img = io.imread(filename, as_grey=self.as_grey, plugin='matplotlib')
+            img = io.imread(filename, as_gray=self.as_gray, plugin='matplotlib')
         return img
 
     def __call__(self):
@@ -67,7 +67,7 @@ class Scaler(object):
     def __call__(self, img):
         scale_factor = self.max_width/float(img.shape[1])
         if scale_factor <= 1:
-            img_small = transform.rescale(img, scale_factor, mode='constant')
+            img_small = transform.rescale(img, scale_factor, mode='constant', multichannel=False, anti_aliasing=True)
         else:
             scale_factor = 1.0
             img_small = img
@@ -252,7 +252,7 @@ class BoxToMRZ(object):
         the old mrz."""
         if roi.shape[1] <= 700:
             scale_by = int(1050.0/roi.shape[1] + 0.5)
-            roi_lg = transform.rescale(roi, scale_by, order=filter_order, mode='constant')
+            roi_lg = transform.rescale(roi, scale_by, order=filter_order, mode='constant', multichannel=False, anti_aliasing=True)
             new_text = ocr(roi_lg)
             new_mrz = MRZ.from_ocr(new_text)
             new_mrz.aux['method'] = 'rescaled(%d)' % filter_order
