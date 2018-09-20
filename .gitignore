@@ -6,3 +6,4 @@
 *.pyc
 /.cache
 /_docs
+/venv*

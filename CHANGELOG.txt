@@ -1,8 +1,14 @@
+Version 1.2.2
+-------------
+
+	- PR#18: fixed skimage warnings
+
 Version 1.2.1
 -------------
 
     - PR#12: Validate date format and validity as an additional check on top of the check digit
 	- PR#15: debugging '--psm' syntax for tesseract 4
+	- PR#18: fixed skimage warnings
 
 Version 1.2.0
 -------------
