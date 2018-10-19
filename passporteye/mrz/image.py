@@ -175,8 +175,8 @@ class FindFirstValidMRZ(object):
     __provides__ = ['box_idx', 'roi', 'text', 'mrz']
     __depends__ = ['boxes', 'img', 'img_small', 'scale_factor', '__data__']
 
-    def __init__(self, tess_params, use_original_image=True):
-        self.box_to_mrz = BoxToMRZ(tess_params, use_original_image)
+    def __init__(self, extra_cmdline_params, use_original_image=True):
+        self.box_to_mrz = BoxToMRZ(extra_cmdline_params, use_original_image)
 
     def __call__(self, boxes, img, img_small, scale_factor, data):
         mrzs = []
@@ -201,12 +201,12 @@ class BoxToMRZ(object):
     __provides__ = ['roi', 'text', 'mrz']
     __depends__ = ['box', 'img', 'img_small', 'scale_factor']
 
-    def __init__(self, tess_params, use_original_image=True):
+    def __init__(self, extra_cmdline_params, use_original_image=True):
         """
         :param use_original_image: when True, the ROI is extracted from img, otherwise from img_small
         """
         self.use_original_image = use_original_image
-        self.tess_params = tess_params
+        self.extra_cmdline_params = extra_cmdline_params
 
     def __call__(self, box, img, img_small, scale_factor):
         img = img if self.use_original_image else img_small
@@ -222,12 +222,12 @@ class BoxToMRZ(object):
             box.angle = 0.0
 
         roi = box.extract_from_image(img, scale)
-        text = ocr(roi, self.tess_params)
+        text = ocr(roi, extra_cmdline_params=self.extra_cmdline_params)
 
         if '>>' in text or ('>' in text and '<' not in text):
             # Most probably we need to reverse the ROI
             roi = roi[::-1, ::-1]
-            text = ocr(roi, self.tess_params)
+            text = ocr(roi, extra_cmdline_params=self.extra_cmdline_params)
 
         if not '<' in text:
             # Assume this is unrecoverable and stop here (TODO: this may be premature, although it saves time on useless stuff)
@@ -256,7 +256,7 @@ class BoxToMRZ(object):
             scale_by = int(1050.0 / roi.shape[1] + 0.5)
             roi_lg = transform.rescale(roi, scale_by, order=filter_order, mode='constant', multichannel=False,
                                        anti_aliasing=True)
-            new_text = ocr(roi_lg, self.tess_params)
+            new_text = ocr(roi_lg, extra_cmdline_params=self.extra_cmdline_params)
             new_mrz = MRZ.from_ocr(new_text)
             new_mrz.aux['method'] = 'rescaled(%d)' % filter_order
             if new_mrz.valid_score > cur_mrz.valid_score:
@@ -268,7 +268,7 @@ class BoxToMRZ(object):
         roi_b = morphology.black_tophat(roi, morphology.disk(5))
         new_text = ocr(
             roi_b,
-            self.tess_params)  # There are some examples where this line basically hangs for an undetermined amount of time.
+            extra_cmdline_params=self.extra_cmdline_params)  # There are some examples where this line basically hangs for an undetermined amount of time.
         new_mrz = MRZ.from_ocr(new_text)
         if new_mrz.valid_score > cur_mrz.valid_score:
             new_mrz.aux['method'] = 'black_tophat'
@@ -308,7 +308,7 @@ class TryOtherMaxWidth(object):
 class MRZPipeline(Pipeline):
     """This is the "currently best-performing" pipeline for parsing MRZ from a given image file."""
 
-    def __init__(self, filename, tess_params):
+    def __init__(self, filename, extra_cmdline_params):
         super(MRZPipeline, self).__init__()
         self.version = '1.0'  # In principle we might have different pipelines in use, so possible backward compatibility is an issue
         self.filename = filename
@@ -316,7 +316,7 @@ class MRZPipeline(Pipeline):
         self.add_component('scaler', Scaler())
         self.add_component('boone', BooneTransform())
         self.add_component('box_locator', MRZBoxLocator())
-        self.add_component('mrz', FindFirstValidMRZ(tess_params))
+        self.add_component('mrz', FindFirstValidMRZ(extra_cmdline_params))
         self.add_component('other_max_width', TryOtherMaxWidth())
 
     @property
@@ -324,14 +324,14 @@ class MRZPipeline(Pipeline):
         return self['mrz_final']
 
 
-def read_mrz(filename, save_roi=False, tess_params=""):
+def read_mrz(filename, save_roi=False, extra_cmdline_params=''):
     """The main interface function to this module, encapsulating the recognition pipeline.
        Given an image filename, runs MRZPipeline on it, returning the parsed MRZ object.
 
     :param save_roi: when this is True, the .aux['roi'] field will contain the Region of Interest where the MRZ was parsed from.
-    :param tess_params:extra parameters to the ocr.py
+    :param extra_cmdline_params:extra parameters to the ocr.py
     """
-    p = MRZPipeline(filename, tess_params)
+    p = MRZPipeline(filename, extra_cmdline_params)
     mrz = p.result
 
     if mrz is not None:
