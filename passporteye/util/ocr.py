@@ -11,7 +11,7 @@ from scipy.misc import imsave
 import sys
 import tempfile
 
-def ocr(img, tess_params, mrz_mode=True):
+def ocr(img, mrz_mode=True, extra_cmdline_params=''):
     """Runs Tesseract on a given image. Writes an intermediate tempfile and then runs the tesseract command on the image.
 
     This is a simplified modification of image_to_string from PyTesseract, which is adapted to SKImage rather than PIL.
@@ -19,7 +19,7 @@ def ocr(img, tess_params, mrz_mode=True):
     In principle we could have reimplemented it just as well - there are some apparent bugs in PyTesseract, but it works so far :)
 
     :param mrz_mode: when this is True (default) the tesseract is configured to recognize MRZs rather than arbitrary texts.
-    :param tess_params:extra parameters to the ocr.py
+    :param extra_cmdline_params:extra parameters to the ocr.py
     """
     input_file_name = '%s.bmp' % _tempnam()
     output_file_name_base = '%s' % _tempnam()
@@ -29,7 +29,7 @@ def ocr(img, tess_params, mrz_mode=True):
 
         if mrz_mode:
 			# NB: Tesseract 4.0 does not seem to support tessedit_char_whitelist
-            config = "--psm 6 -c tessedit_char_whitelist=ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789>< -c load_system_dawg=F -c load_freq_dawg=F {}".format(tess_params)
+            config = "--psm 6 -c tessedit_char_whitelist=ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789>< -c load_system_dawg=F -c load_freq_dawg=F {}".format(extra_cmdline_params)
         else:
             config = ""
 
