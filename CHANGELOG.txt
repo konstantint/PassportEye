@@ -1,3 +1,8 @@
+Version 1.2.4
+-------------
+
+	- PR#22: Extra command line parameters for Tesseract
+
 Version 1.2.3
 -------------
 
