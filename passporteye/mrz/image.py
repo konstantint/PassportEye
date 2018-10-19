@@ -175,8 +175,8 @@ class FindFirstValidMRZ(object):
     __provides__ = ['box_idx', 'roi', 'text', 'mrz']
     __depends__ = ['boxes', 'img', 'img_small', 'scale_factor', '__data__']
 
-    def __init__(self, extra_cmdline_params, use_original_image=True):
-        self.box_to_mrz = BoxToMRZ(extra_cmdline_params, use_original_image)
+    def __init__(self, use_original_image=True, extra_cmdline_params=''):
+        self.box_to_mrz = BoxToMRZ(use_original_image, extra_cmdline_params=extra_cmdline_params)
 
     def __call__(self, boxes, img, img_small, scale_factor, data):
         mrzs = []
@@ -201,7 +201,7 @@ class BoxToMRZ(object):
     __provides__ = ['roi', 'text', 'mrz']
     __depends__ = ['box', 'img', 'img_small', 'scale_factor']
 
-    def __init__(self, extra_cmdline_params, use_original_image=True):
+    def __init__(self, use_original_image=True, extra_cmdline_params=''):
         """
         :param use_original_image: when True, the ROI is extracted from img, otherwise from img_small
         """
@@ -308,7 +308,7 @@ class TryOtherMaxWidth(object):
 class MRZPipeline(Pipeline):
     """This is the "currently best-performing" pipeline for parsing MRZ from a given image file."""
 
-    def __init__(self, filename, extra_cmdline_params):
+    def __init__(self, filename, extra_cmdline_params=''):
         super(MRZPipeline, self).__init__()
         self.version = '1.0'  # In principle we might have different pipelines in use, so possible backward compatibility is an issue
         self.filename = filename
@@ -316,7 +316,7 @@ class MRZPipeline(Pipeline):
         self.add_component('scaler', Scaler())
         self.add_component('boone', BooneTransform())
         self.add_component('box_locator', MRZBoxLocator())
-        self.add_component('mrz', FindFirstValidMRZ(extra_cmdline_params))
+        self.add_component('mrz', FindFirstValidMRZ(extra_cmdline_params=extra_cmdline_params))
         self.add_component('other_max_width', TryOtherMaxWidth())
 
     @property
