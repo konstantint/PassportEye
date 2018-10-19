@@ -1,3 +1,8 @@
+Version 1.2.3
+-------------
+
+	- Issue #21: Added correct sklearn version requirement.
+
 Version 1.2.2
 -------------
 

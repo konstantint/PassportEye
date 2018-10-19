@@ -27,9 +27,10 @@ def ocr(img, mrz_mode=True):
         imsave(input_file_name, img)
 
         if mrz_mode:
+			# NB: Tesseract 4.0 does not seem to support tessedit_char_whitelist
             config = "--psm 6 -c tessedit_char_whitelist=ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789>< -c load_system_dawg=F -c load_freq_dawg=F"
         else:
-            config = None
+            config = ""
 
         pytesseract.run_tesseract(input_file_name,
                                  output_file_name_base,
