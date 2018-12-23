@@ -33,7 +33,7 @@ def extract_first_jpeg_in_pdf(fstream):
     for PDFMiner.
 
     :param fstream: Readable binary stream of the PDF
-    :return: String, containing the whole contents of the JPEG image or None if extraction failed.
+    :return: binary stream, containing the whole contents of the JPEG image or None if extraction failed.
     """
     parser = PDFParser(fstream)
     if PY2:

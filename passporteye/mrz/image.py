@@ -5,7 +5,9 @@ Image processing for MRZ extraction.
 Author: Konstantin Tretyakov
 License: MIT
 '''
-from skimage import transform, io, morphology, filters, measure
+from skimage import transform, morphology, filters, measure
+from skimage import io as skimage_io # So as not to clash with builtin io
+import io
 import numpy as np
 import tempfile, os
 from ..util.pdf import extract_first_jpeg_in_pdf
@@ -16,44 +18,42 @@ from .text import MRZ
 
 
 class Loader(object):
-    """Loads `filename` to `img`."""
+    """Loads `fileuri` to `img`."""
 
     __depends__ = []
     __provides__ = ['img']
 
-    def __init__(self, filename, as_gray=True, pdf_aware=True):
-        self.filename = filename
+    def __init__(self, fileuri, as_gray=True, pdf_aware=True):
+        self.fileuri = fileuri
         self.as_gray = as_gray
         self.pdf_aware = pdf_aware
 
-    def _imread(self, filename):
+    def _imread(self, fileuri):
         """Proxy to skimage.io.imread with some fixes."""
-        img = io.imread(filename, as_gray=self.as_gray)
+        # For now, we have to select the imageio plugin to read image from byte stream
+        # When ski-image v0.15 is released, imageio will be the default plugin, so this
+        # code can be simplified at that time.  See issue report and pull request:
+        # https://github.com/scikit-image/scikit-image/issues/2889
+        # https://github.com/scikit-image/scikit-image/pull/3126
+        img = skimage_io.imread(fileuri, as_gray=self.as_gray, plugin='imageio')
         if img is not None and len(img.shape) != 2:
             # The PIL plugin somewhy fails to load some images
-            img = io.imread(filename, as_gray=self.as_gray, plugin='matplotlib')
+            img = skimage_io.imread(fileuri, as_gray=self.as_gray, plugin='matplotlib')
         return img
 
     def __call__(self):
-        if self.pdf_aware and self.filename.lower().endswith('.pdf'):
-            with open(self.filename, 'rb') as f:
-                img_data = extract_first_jpeg_in_pdf(f)
-            if img_data is None:
-                return None
-            else:
-                fd, fname = tempfile.mkstemp(prefix='pythoneye_', suffix='.jpg')
-                try:
-                    with open(fname, 'wb') as f:
-                        f.write(img_data)
-                    return self._imread(fname)
-                except:
+        if isinstance(self.fileuri, str):
+            if self.pdf_aware and self.fileuri.lower().endswith('.pdf'):
+                with open(self.fileuri, 'rb') as f:
+                    img_data = extract_first_jpeg_in_pdf(f)
+                if img_data is None:
                     return None
-                finally:
-                    os.close(fd)
-                    os.remove(fname)
-        else:
-            return self._imread(self.filename)
-
+                return self._imread(img_data)
+            else:
+                return self._imread(self.fileuri)
+        elif isinstance(self.fileuri, (bytes, io.IOBase)):
+            return self._imread(self.fileuri)
+        return None
 
 class Scaler(object):
     """Scales `image` down to `img_scaled` so that its width is at most 250."""
@@ -308,11 +308,11 @@ class TryOtherMaxWidth(object):
 class MRZPipeline(Pipeline):
     """This is the "currently best-performing" pipeline for parsing MRZ from a given image file."""
 
-    def __init__(self, filename, extra_cmdline_params=''):
+    def __init__(self, fileuri, extra_cmdline_params=''):
         super(MRZPipeline, self).__init__()
         self.version = '1.0'  # In principle we might have different pipelines in use, so possible backward compatibility is an issue
-        self.filename = filename
-        self.add_component('loader', Loader(filename))
+        self.fileuri = fileuri
+        self.add_component('loader', Loader(fileuri))
         self.add_component('scaler', Scaler())
         self.add_component('boone', BooneTransform())
         self.add_component('box_locator', MRZBoxLocator())
@@ -324,14 +324,14 @@ class MRZPipeline(Pipeline):
         return self['mrz_final']
 
 
-def read_mrz(filename, save_roi=False, extra_cmdline_params=''):
+def read_mrz(fileuri, save_roi=False, extra_cmdline_params=''):
     """The main interface function to this module, encapsulating the recognition pipeline.
        Given an image filename, runs MRZPipeline on it, returning the parsed MRZ object.
 
     :param save_roi: when this is True, the .aux['roi'] field will contain the Region of Interest where the MRZ was parsed from.
     :param extra_cmdline_params:extra parameters to the ocr.py
     """
-    p = MRZPipeline(filename, extra_cmdline_params)
+    p = MRZPipeline(fileuri, extra_cmdline_params)
     mrz = p.result
 
     if mrz is not None:
