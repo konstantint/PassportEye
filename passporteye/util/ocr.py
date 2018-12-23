@@ -6,10 +6,10 @@ Author: Konstantin Tretyakov
 License: MIT
 '''
 
-from pytesseract import pytesseract
-from scipy.misc import imsave
 import sys
 import tempfile
+from imageio import imwrite
+from pytesseract import pytesseract
 
 def ocr(img, mrz_mode=True, extra_cmdline_params=''):
     """Runs Tesseract on a given image. Writes an intermediate tempfile and then runs the tesseract command on the image.
@@ -19,19 +19,22 @@ def ocr(img, mrz_mode=True, extra_cmdline_params=''):
     In principle we could have reimplemented it just as well - there are some apparent bugs in PyTesseract, but it works so far :)
 
     :param mrz_mode: when this is True (default) the tesseract is configured to recognize MRZs rather than arbitrary texts.
-    :param extra_cmdline_params:extra parameters to the ocr.py
+                     When False, no specific configuration parameters are passed (and you are free to provide your own via `extra_cmdline_params`)
+    :param extra_cmdline_params: extra parameters passed to tesseract. When mrz_mode=True, these are appended to whatever is the
+                    "best known" configuration at the moment.
     """
     input_file_name = '%s.bmp' % _tempnam()
     output_file_name_base = '%s' % _tempnam()
     output_file_name = "%s.txt" % output_file_name_base
     try:
-        imsave(input_file_name, img)
+        imwrite(input_file_name, img)
 
         if mrz_mode:
 			# NB: Tesseract 4.0 does not seem to support tessedit_char_whitelist
-            config = "--psm 6 -c tessedit_char_whitelist=ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789>< -c load_system_dawg=F -c load_freq_dawg=F {}".format(extra_cmdline_params)
+            # NB: --oem 0 selects the "legacy" engine, which seems to do much better on MRZs than the new one
+            config = "--oem 0 --psm 6 -c tessedit_char_whitelist=ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789>< -c load_system_dawg=F -c load_freq_dawg=F {}".format(extra_cmdline_params)
         else:
-            config = ""
+            config = "{}".format(extra_cmdline_params)
 
         pytesseract.run_tesseract(input_file_name,
                                  output_file_name_base,

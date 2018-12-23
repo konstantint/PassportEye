@@ -1,29 +1,15 @@
-Version 1.2.4
--------------
+Version 1.2.0-1.2.5
+-------------------
 
-	- PR#22: Extra command line parameters for Tesseract
-
-Version 1.2.3
--------------
-
-	- Issue #21: Added correct sklearn version requirement.
-
-Version 1.2.2
--------------
-
-	- PR#18: fixed skimage warnings
-
-Version 1.2.1
--------------
-
-    - PR#12: Validate date format and validity as an additional check on top of the check digit
-	- PR#15: debugging '--psm' syntax for tesseract 4
-	- PR#18: fixed skimage warnings
-
-Version 1.2.0
--------------
-
-    - Pinned PyTesseract version to >= 0.2.0
+    - (1.2.0) Pinned PyTesseract version to >= 0.2.0
+    - (1.2.1) PR#12: Validate date format and validity as an additional check on top of the check digit
+	- (1.2.1) PR#15: debugging '--psm' syntax for tesseract 4
+	- (1.2.1) PR#18: fixed skimage warnings
+	- (1.2.2) PR#18: fixed skimage warnings
+	- (1.2.3) Issue #21: Added correct sklearn version requirement.
+	- (1.2.4) PR#22: Extra command line parameters for Tesseract
+    - (1.2.5) PR#25, Issue#24: Support reading images from stream. Added dependency on ImageIO.
+    - (1.2.5) Tesseract forced to use legacy mode by default (as it seems to work better than the LSTM one).
 
 Version 1.1.2
 -------------
