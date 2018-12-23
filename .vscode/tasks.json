@@ -1,0 +1,63 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "type": "shell",
+    "isBackground": true,
+    "options": {
+        "env": {"PATH": "./venv3/Scripts"}
+    },
+    "presentation": {
+        "panel": "dedicated"
+    },
+    "tasks": [
+        {
+            "label": "jupyter",
+            "type": "shell",
+            "command": "jupyter notebook",
+            "problemMatcher": []
+        },
+        {
+            "label": "shell",
+            "type": "shell",
+            "problemMatcher": [],
+            "command": "ipython",
+            "presentation": {
+                "reveal": "always",
+                "panel": "new",
+                "focus": true
+            }
+        },
+        {
+            "label": "py.test: all tests",
+            "command": "py.test",
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated"
+            },
+            "group": "test"
+        },
+        {
+            "label": "py.test: current file",
+            "command": "py.test",
+            "args": [
+                "${file}"
+            ],
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated"
+            },
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "Upload to PyPI",
+            "command": ".\\.vscode\\pypi-upload.cmd",
+            "problemMatcher": []
+        }
+    ]
+}

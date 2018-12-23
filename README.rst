@@ -78,13 +78,9 @@ Development
 
 If you plan to develop or debug the package, consider installing it by running::
 
-    $ python setup.py develop
+    $ pip install -e .[dev]
 
-from within the source distribution. The package contains a basic set of smoke tests. To run those you should first make sure you have
-`pytest` installed::
-
-    $ pip install pytest
-
+This will install the package in "editable" mode and add a couple of useful extras (such as `pytest`). 
 You can then run the tests by typing::
 
     $ py.test

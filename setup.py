@@ -47,6 +47,10 @@ setup(name='PassportEye',
       zip_safe=False,
       install_requires=['numpy', 'scipy', 'scikit-image >= 0.14.1', 'scikit-learn', 'matplotlib', 'pytesseract >= 0.2.0', 
                         'pdfminer' if sys.version_info.major == 2 else 'pdfminer3k'],
+      extras_require={
+          "test": ["pytest"],
+          "dev": ["pytest", "pylint", "jupyter", "twine"],
+      },
       entry_points={
           'console_scripts': ['evaluate_mrz=passporteye.mrz.scripts:evaluate_mrz',
                               'mrz=passporteye.mrz.scripts:mrz']
