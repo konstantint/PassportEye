@@ -5,6 +5,7 @@ MRZ textual representation parsing.
 Author: Konstantin Tretyakov
 License: MIT
 '''
+#pylint: disable=attribute-defined-outside-init,line-too-long
 from collections import OrderedDict
 from datetime import datetime
 
@@ -155,7 +156,7 @@ class MRZ(object):
                 return 'MRVA' if mrz_lines[0][0].upper() == 'V' else 'TD3'
             else:
                 return None
-        except:
+        except Exception: #pylint: disable=broad-except
             return None
 
     def _parse(self, mrz_lines):
@@ -174,7 +175,7 @@ class MRZ(object):
             else:
                 self.valid = False
                 self.valid_score = 0
-        except Exception:
+        except Exception: #pylint: disable=broad-except
             self.mrz_type = None
             self.valid = False
             self.valid_score = 0
@@ -254,9 +255,9 @@ class MRZ(object):
         self.surname = self.surname.replace('<', ' ').strip()
 
         self.valid_check_digits = [MRZCheckDigit.compute(self.number) == self.check_number,
-                            MRZCheckDigit.compute(self.date_of_birth) == self.check_date_of_birth and MRZ._check_date(self.date_of_birth),
-                            MRZCheckDigit.compute(self.expiration_date) == self.check_expiration_date and MRZ._check_date(self.expiration_date),
-                            MRZCheckDigit.compute(a[5:30] + b[0:7] + b[8:15] + b[18:29]) == self.check_composite]
+                                   MRZCheckDigit.compute(self.date_of_birth) == self.check_date_of_birth and MRZ._check_date(self.date_of_birth),
+                                   MRZCheckDigit.compute(self.expiration_date) == self.check_expiration_date and MRZ._check_date(self.expiration_date),
+                                   MRZCheckDigit.compute(a[5:30] + b[0:7] + b[8:15] + b[18:29]) == self.check_composite]
         self.valid_line_lengths = [len_a == 30, len_b == 30, len_c == 30]
         self.valid_misc = [a[0] in 'IAC']
         self.valid_score = 10*sum(self.valid_check_digits) + sum(self.valid_line_lengths) + sum(self.valid_misc) + 1
@@ -290,9 +291,9 @@ class MRZ(object):
         self.optional1 = b[28:35]
         self.check_composite = b[35]
         self.valid_check_digits = [MRZCheckDigit.compute(self.number) == self.check_number,
-                             MRZCheckDigit.compute(self.date_of_birth) == self.check_date_of_birth and MRZ._check_date(self.date_of_birth),
-                             MRZCheckDigit.compute(self.expiration_date) == self.check_expiration_date and MRZ._check_date(self.expiration_date),
-                             MRZCheckDigit.compute(b[0:10] + b[13:20] + b[21:35]) == self.check_composite]
+                                   MRZCheckDigit.compute(self.date_of_birth) == self.check_date_of_birth and MRZ._check_date(self.date_of_birth),
+                                   MRZCheckDigit.compute(self.expiration_date) == self.check_expiration_date and MRZ._check_date(self.expiration_date),
+                                   MRZCheckDigit.compute(b[0:10] + b[13:20] + b[21:35]) == self.check_composite]
         self.valid_line_lengths = [len_a == 36, len_b == 36]
         self.valid_misc = [a[0] in 'ACI']
         self.valid_score = 10*sum(self.valid_check_digits) + sum(self.valid_line_lengths) + sum(self.valid_misc) +1
@@ -327,11 +328,11 @@ class MRZ(object):
         self.check_personal_number = b[42]
         self.check_composite = b[43]
         self.valid_check_digits = [MRZCheckDigit.compute(self.number) == self.check_number,
-                             MRZCheckDigit.compute(self.date_of_birth) == self.check_date_of_birth and MRZ._check_date(self.date_of_birth),
-                             MRZCheckDigit.compute(self.expiration_date) == self.check_expiration_date and MRZ._check_date(self.expiration_date),
-                             MRZCheckDigit.compute(b[0:10] + b[13:20] + b[21:43]) == self.check_composite,
-                             ((self.check_personal_number == '<' or self.check_personal_number == '0') and self.personal_number == '<<<<<<<<<<<<<<') # PN is optional
-                                or MRZCheckDigit.compute(self.personal_number) == self.check_personal_number]
+                                   MRZCheckDigit.compute(self.date_of_birth) == self.check_date_of_birth and MRZ._check_date(self.date_of_birth),
+                                   MRZCheckDigit.compute(self.expiration_date) == self.check_expiration_date and MRZ._check_date(self.expiration_date),
+                                   MRZCheckDigit.compute(b[0:10] + b[13:20] + b[21:43]) == self.check_composite,
+                                   ((self.check_personal_number == '<' or self.check_personal_number == '0') and self.personal_number == '<<<<<<<<<<<<<<') # PN is optional
+                                   or MRZCheckDigit.compute(self.personal_number) == self.check_personal_number]
         self.valid_line_lengths = [len_a == 44, len_b == 44]
         self.valid_misc = [a[0] in 'P']
         self.valid_score = 10*sum(self.valid_check_digits) + sum(self.valid_line_lengths) + sum(self.valid_misc) +1
@@ -371,10 +372,10 @@ class MRZ(object):
         self.check_expiration_date = b[27]
         self.optional1 = b[28:length]
         self.valid_check_digits = [MRZCheckDigit.compute(self.number) == self.check_number,
-                             MRZCheckDigit.compute(self.date_of_birth) == self.check_date_of_birth,
-                             MRZCheckDigit.compute(self.expiration_date) == self.check_expiration_date]
+                                   MRZCheckDigit.compute(self.date_of_birth) == self.check_date_of_birth,
+                                   MRZCheckDigit.compute(self.expiration_date) == self.check_expiration_date]
         self.valid_line_lengths = [len_a == length, len_b == length]
-        self.valid_misc = [a[0]=='V']
+        self.valid_misc = [a[0] == 'V']
         self.valid_score = 10*sum(self.valid_check_digits) + sum(self.valid_line_lengths) + sum(self.valid_misc) + 1
         self.valid_score = 100*self.valid_score//(30+2+1+1)
         self.valid_number, self.valid_date_of_birth, self.valid_expiration_date = self.valid_check_digits
@@ -407,13 +408,13 @@ class MRZOCRCleaner(object):
         TD2 = ['a' + 'A'*35,
                '*'*9 + 'n' + 'A'*3 + 'n'*7 + 'A' + 'n'*7 + '*'*7 + 'n'*1]
         TD3 = ['a' + 'A'*43,
-               '*'*9 + 'n' + 'A'*3 + 'n'*7 + 'A' + 'n'*7 + '*'*14 + 'n'*2 ]
+               '*'*9 + 'n' + 'A'*3 + 'n'*7 + 'A' + 'n'*7 + '*'*14 + 'n'*2]
         MRV = ['a' + 'A'*43,
-               '*'*9 + 'n' + 'A'*3 + 'n'*7 + 'A' + 'n'*7 + '*'*16 ]
+               '*'*9 + 'n' + 'A'*3 + 'n'*7 + 'A' + 'n'*7 + '*'*16]
         self.FORMAT = {'TD1': TD1, 'TD2': TD2, 'TD3': TD3, 'MRVA': MRV, 'MRVB': MRV}
 
         # Fixers
-        a = {'0': 'O', '1': 'I', '2': 'Z', '4': 'A', '5': 'S', '6': 'G', '8': 'B' }
+        a = {'0': 'O', '1': 'I', '2': 'Z', '4': 'A', '5': 'S', '6': 'G', '8': 'B'}
         n = {'B': '8', 'C': '0', 'D': '0', 'G': '6', 'I': '1', 'O': '0', 'Q': '0', 'S': '5', 'Z': '2'}
         self.FIXERS = {'a': a, 'A': a, 'n': n, 'N': n, '*': {}}
 
@@ -431,15 +432,15 @@ class MRZOCRCleaner(object):
               what characters are allowed at particular positions.
         """
         lines = self._split_lines(mrz_ocr_string)
-        tp = MRZ._guess_type(lines)
+        tp = MRZ._guess_type(lines) #pylint: disable=protected-access
         if tp is not None:
-            for i in range(len(lines)):
+            for i in range(len(lines)): #pylint: disable=consider-using-enumerate
                 lines[i] = self._fix_line(lines[i], tp, i)
         return lines
 
     def _fix_line(self, line, type, line_idx):
         ln = list(line)
-        for j in range(len(ln)):
+        for j in range(len(ln)): #pylint: disable=consider-using-enumerate
             ln[j] = self._fix_char(ln[j], type, line_idx, j)
         return ''.join(ln)
 
@@ -508,4 +509,3 @@ class MRZCheckDigit(object):
         if getattr(MRZCheckDigit, '__instance__', None) is None:
             MRZCheckDigit.__instance__ = MRZCheckDigit()
         return MRZCheckDigit.__instance__(txt)
-

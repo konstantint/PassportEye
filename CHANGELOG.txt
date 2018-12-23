@@ -4,6 +4,7 @@ Changelog
     - (1.3.0)
         - PR#25, Issue#24: Support reading images from stream. Added dependency on ImageIO.
         - Tesseract forced to use legacy mode by default (as it seems to work better than the LSTM one).
+        - Result of `read_mrz`, when not None, now also provides access to the OCR-ed text in `mrz.aux['text']`. 
     
 	- (1.2.4) PR#22: Extra command line parameters for Tesseract
 	- (1.2.3) Issue #21: Added correct sklearn version requirement.

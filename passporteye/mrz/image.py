@@ -5,11 +5,10 @@ Image processing for MRZ extraction.
 Author: Konstantin Tretyakov
 License: MIT
 '''
-from skimage import transform, morphology, filters, measure
-from skimage import io as skimage_io # So as not to clash with builtin io
 import io
 import numpy as np
-import tempfile, os
+from skimage import transform, morphology, filters, measure
+from skimage import io as skimage_io # So as not to clash with builtin io
 from ..util.pdf import extract_first_jpeg_in_pdf
 from ..util.pipeline import Pipeline
 from ..util.geometry import RotatedBox
@@ -18,41 +17,41 @@ from .text import MRZ
 
 
 class Loader(object):
-    """Loads `fileuri` to `img`."""
+    """Loads `file` to `img`."""
 
     __depends__ = []
     __provides__ = ['img']
 
-    def __init__(self, fileuri, as_gray=True, pdf_aware=True):
-        self.fileuri = fileuri
+    def __init__(self, file, as_gray=True, pdf_aware=True):
+        self.file = file
         self.as_gray = as_gray
         self.pdf_aware = pdf_aware
 
-    def _imread(self, fileuri):
+    def _imread(self, file):
         """Proxy to skimage.io.imread with some fixes."""
         # For now, we have to select the imageio plugin to read image from byte stream
         # When ski-image v0.15 is released, imageio will be the default plugin, so this
         # code can be simplified at that time.  See issue report and pull request:
         # https://github.com/scikit-image/scikit-image/issues/2889
         # https://github.com/scikit-image/scikit-image/pull/3126
-        img = skimage_io.imread(fileuri, as_gray=self.as_gray, plugin='imageio')
+        img = skimage_io.imread(file, as_gray=self.as_gray, plugin='imageio')
         if img is not None and len(img.shape) != 2:
             # The PIL plugin somewhy fails to load some images
-            img = skimage_io.imread(fileuri, as_gray=self.as_gray, plugin='matplotlib')
+            img = skimage_io.imread(file, as_gray=self.as_gray, plugin='matplotlib')
         return img
 
     def __call__(self):
-        if isinstance(self.fileuri, str):
-            if self.pdf_aware and self.fileuri.lower().endswith('.pdf'):
-                with open(self.fileuri, 'rb') as f:
+        if isinstance(self.file, str):
+            if self.pdf_aware and self.file.lower().endswith('.pdf'):
+                with open(self.file, 'rb') as f:
                     img_data = extract_first_jpeg_in_pdf(f)
                 if img_data is None:
                     return None
                 return self._imread(img_data)
             else:
-                return self._imread(self.fileuri)
-        elif isinstance(self.fileuri, (bytes, io.IOBase)):
-            return self._imread(self.fileuri)
+                return self._imread(self.file)
+        elif isinstance(self.file, (bytes, io.IOBase)):
+            return self._imread(self.file)
         return None
 
 class Scaler(object):
@@ -83,7 +82,7 @@ class BooneTransform(object):
     __provides__ = ['img_binary']
 
     def __init__(self, square_size=5):
-        self.square_size = 5
+        self.square_size = square_size
 
     def __call__(self, img_small):
         m = morphology.square(self.square_size)
@@ -119,11 +118,13 @@ class MRZBoxLocator(object):
             # Now examine the bounding box. If it is too small, we ignore the contour
             ll, ur = np.min(c, 0), np.max(c, 0)
             wh = ur - ll
-            if wh[0] * wh[1] < self.min_area: continue
+            if wh[0] * wh[1] < self.min_area:
+                continue
 
             # Finally, construct the rotatedbox. If its aspect ratio is too small, we ignore it
             rb = RotatedBox.from_points(c, self.box_type)
-            if rb.height == 0 or rb.width / rb.height < self.min_box_aspect: continue
+            if rb.height == 0 or rb.width / rb.height < self.min_box_aspect:
+                continue
 
             # All tests fine, add to the list
             results.append(rb)
@@ -138,17 +139,18 @@ class MRZBoxLocator(object):
 
     def _are_nearby_parallel_boxes(self, b1, b2):
         "Are two boxes nearby, parallel, and similar in width?"
-        if not self._are_aligned_angles(b1.angle, b2.angle): return False
+        if not self._are_aligned_angles(b1.angle, b2.angle):
+            return False
         # Otherwise pick the smaller angle and see whether the two boxes are close according to the "up" direction wrt that angle
         angle = min(b1.angle, b2.angle)
         return abs(np.dot(b1.center - b2.center, [-np.sin(angle), np.cos(angle)])) < self.lineskip_tol * (
-                b1.height + b2.height) and \
-               (b1.width > 0) and (b2.width > 0) and (0.5 < b1.width / b2.width < 2.0)
+            b1.height + b2.height) and (b1.width > 0) and (b2.width > 0) and (0.5 < b1.width / b2.width < 2.0)
 
     def _merge_any_two_boxes(self, box_list):
         """Given a list of boxes, finds two nearby parallel ones and merges them. Returns false if none found."""
-        for i in range(len(box_list)):
-            for j in range(i + 1, len(box_list)):
+        n = len(box_list)
+        for i in range(n):
+            for j in range(i + 1, n):
                 if self._are_nearby_parallel_boxes(box_list[i], box_list[j]):
                     # Remove the two boxes from the list, add a new one
                     a, b = box_list[i], box_list[j]
@@ -188,7 +190,7 @@ class FindFirstValidMRZ(object):
                 return i, roi, text, mrz
             elif mrz.valid_score > 0:
                 mrzs.append((i, roi, text, mrz))
-        if len(mrzs) == 0:
+        if not mrzs:
             return None, None, None, None
         else:
             mrzs.sort(key=lambda x: x[3].valid_score)
@@ -266,9 +268,8 @@ class BoxToMRZ(object):
 
     def _try_black_tophat(self, roi, cur_text, cur_mrz):
         roi_b = morphology.black_tophat(roi, morphology.disk(5))
-        new_text = ocr(
-            roi_b,
-            extra_cmdline_params=self.extra_cmdline_params)  # There are some examples where this line basically hangs for an undetermined amount of time.
+        # There are some examples where this line basically hangs for an undetermined amount of time.
+        new_text = ocr(roi_b, extra_cmdline_params=self.extra_cmdline_params)
         new_mrz = MRZ.from_ocr(new_text)
         if new_mrz.valid_score > cur_mrz.valid_score:
             new_mrz.aux['method'] = 'black_tophat'
@@ -308,11 +309,11 @@ class TryOtherMaxWidth(object):
 class MRZPipeline(Pipeline):
     """This is the "currently best-performing" pipeline for parsing MRZ from a given image file."""
 
-    def __init__(self, fileuri, extra_cmdline_params=''):
+    def __init__(self, file, extra_cmdline_params=''):
         super(MRZPipeline, self).__init__()
         self.version = '1.0'  # In principle we might have different pipelines in use, so possible backward compatibility is an issue
-        self.fileuri = fileuri
-        self.add_component('loader', Loader(fileuri))
+        self.file = file
+        self.add_component('loader', Loader(file))
         self.add_component('scaler', Scaler())
         self.add_component('boone', BooneTransform())
         self.add_component('box_locator', MRZBoxLocator())
@@ -324,16 +325,19 @@ class MRZPipeline(Pipeline):
         return self['mrz_final']
 
 
-def read_mrz(fileuri, save_roi=False, extra_cmdline_params=''):
+def read_mrz(file, save_roi=False, extra_cmdline_params=''):
     """The main interface function to this module, encapsulating the recognition pipeline.
        Given an image filename, runs MRZPipeline on it, returning the parsed MRZ object.
 
+    :param file: A filename or a stream to read the file data from.
     :param save_roi: when this is True, the .aux['roi'] field will contain the Region of Interest where the MRZ was parsed from.
     :param extra_cmdline_params:extra parameters to the ocr.py
     """
-    p = MRZPipeline(fileuri, extra_cmdline_params)
+    p = MRZPipeline(file, extra_cmdline_params)
     mrz = p.result
 
     if mrz is not None:
-        if save_roi: mrz.aux['roi'] = p['roi']
+        mrz.aux['text'] = p['text']
+        if save_roi:
+            mrz.aux['roi'] = p['roi']
     return mrz

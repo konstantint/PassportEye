@@ -1,6 +1,8 @@
 ==========================================================================
 PassportEye: Python tools for image processing of identification documents
 ==========================================================================
+.. image:: https://travis-ci.org/konstantint/PassportEye.svg?branch=master
+    :target: https://travis-ci.org/konstantint/PassportEye
 
 The package provides tools for recognizing machine readable zones (MRZ) from scanned identification documents.
 The documents may be located rather arbitrarily on the page - the code tries to find anything resembling a MRZ 
@@ -18,8 +20,7 @@ a situation not accounted for too well by the current algorithm.
 Installation
 ------------
 
-The simplest way to install the package is via ``easy_install`` or
-``pip``::
+The simplest way to install the package is via ``pip``::
 
     $ pip install PassportEye
 
@@ -46,9 +47,9 @@ has not been tested extensively.
 In order to use the recognition function in Python code, simply do::
 
     >> from passporteye import read_mrz
-    >> mrz = read_mrz(image_fileuri)
+    >> mrz = read_mrz(image_file)
 
-Where image_fileuri can be either a path to a file on disk, or a byte stream containing image data.
+Where image_file can be either a path to a file on disk, or a byte stream containing image data.
 
 The returned object (unless it is None, which means no ROI was detected) contains the fields extracted from the MRZ along
 with some metainformation. For the description of the available fields, see the docstring for the `passporteye.mrz.text.MRZ` class.
@@ -56,14 +57,14 @@ Note that you can convert the object to a dictionary using the ``to_dict()`` met
 
 If you want to have the ROI reported alongside the MRZ, call the ``read_mrz`` function as follows::
 
-    >> mrz = read_mrz(image_fileuri, save_roi=True)
+    >> mrz = read_mrz(image_file, save_roi=True)
 
 The ROI can then be accessed as ``mrz.aux['roi']`` -- it is a numpy ndarray, representing the (grayscale) image region where the OCR was applied.
 
 For more flexibility, you may instead use a ``MRZPipeline`` object, which will provide you access to all intermediate computations as follows::
 
     >> from passporteye.mrz.image import MRZPipeline
-    >> p = MRZPipeline(fileuri)
+    >> p = MRZPipeline(file)
     >> mrz = p.result
 
 The "pipeline" object stores the intermediate computations in its ``data`` dictionary. Although you need to understand the underlying algorithm
