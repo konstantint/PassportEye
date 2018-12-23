@@ -11,6 +11,7 @@ import tempfile
 from imageio import imwrite
 from pytesseract import pytesseract
 
+
 def ocr(img, mrz_mode=True, extra_cmdline_params=''):
     """Runs Tesseract on a given image. Writes an intermediate tempfile and then runs the tesseract command on the image.
 
@@ -32,15 +33,16 @@ def ocr(img, mrz_mode=True, extra_cmdline_params=''):
         if mrz_mode:
 			# NB: Tesseract 4.0 does not seem to support tessedit_char_whitelist
             # NB: --oem 0 selects the "legacy" engine, which seems to do much better on MRZs than the new one
-            config = "--oem 0 --psm 6 -c tessedit_char_whitelist=ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789>< -c load_system_dawg=F -c load_freq_dawg=F {}".format(extra_cmdline_params)
+            config = ("--oem 0 --psm 6 -c tessedit_char_whitelist=ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789><"
+                      " -c load_system_dawg=F -c load_freq_dawg=F {}").format(extra_cmdline_params)
         else:
             config = "{}".format(extra_cmdline_params)
 
         pytesseract.run_tesseract(input_file_name,
-                                 output_file_name_base,
-                                 'txt',
-                                 lang=None,
-                                 config=config)
+                                  output_file_name_base,
+                                  'txt',
+                                  lang=None,
+                                  config=config)
         
         if sys.version_info.major == 3:
             f = open(output_file_name, encoding='utf-8')

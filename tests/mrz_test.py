@@ -88,9 +88,9 @@ def assert_td3_jpg(mrz):
     assert mrz.check_expiration_date == '9'
     assert mrz.check_composite == '0'
     assert mrz.check_personal_number == '1'
-    assert mrz.valid_number == True
-    assert mrz.valid_date_of_birth == True
-    assert mrz.valid_expiration_date == True
+    assert mrz.valid_number
+    assert mrz.valid_date_of_birth
+    assert mrz.valid_expiration_date
     #assert mrz.valid_composite == False
     #assert mrz.valid_personal_number == False
 
@@ -113,9 +113,9 @@ def assert_td3_png(mrz):
     assert mrz.check_expiration_date == '9'
     assert mrz.check_composite == '0'
     assert mrz.check_personal_number == '1'
-    assert mrz.valid_number == True
-    assert mrz.valid_date_of_birth == True
-    assert mrz.valid_expiration_date == True
+    assert mrz.valid_number
+    assert mrz.valid_date_of_birth
+    assert mrz.valid_expiration_date
     #assert mrz.valid_composite == True
     #assert mrz.valid_personal_number == True
 
@@ -136,10 +136,10 @@ def assert_td2_jpg(mrz):
     assert mrz.check_date_of_birth == '2'
     assert mrz.check_expiration_date == '9'
     assert mrz.check_composite == '6'
-    assert mrz.valid_number == True
-    assert mrz.valid_date_of_birth == True
-    assert mrz.valid_expiration_date == True
-    assert mrz.valid_composite == True
+    assert mrz.valid_number
+    assert mrz.valid_date_of_birth
+    assert mrz.valid_expiration_date
+    assert mrz.valid_composite
 
 def assert_td2_png(mrz):
     assert mrz.mrz_type == 'TD2'
@@ -158,7 +158,7 @@ def assert_td2_png(mrz):
     assert mrz.check_date_of_birth == '2'
     assert mrz.check_expiration_date == '9'
     assert mrz.check_composite == '6'
-    assert mrz.valid_number == True
-    assert mrz.valid_date_of_birth == True
-    assert mrz.valid_expiration_date == True
-    assert mrz.valid_composite == True
+    assert mrz.valid_number
+    assert mrz.valid_date_of_birth
+    assert mrz.valid_expiration_date
+    assert mrz.valid_composite

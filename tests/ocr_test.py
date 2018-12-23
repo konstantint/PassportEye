@@ -7,8 +7,8 @@ Author: Konstantin Tretyakov
 License: MIT
 '''
 from pkg_resources import resource_filename
-from passporteye.util.ocr import ocr
 from skimage.io import imread
+from passporteye.util.ocr import ocr
 
 
 # Smoke test for Tesseract OCR
