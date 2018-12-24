@@ -44,6 +44,13 @@ Note that the tool provides a limited support for PDF files -- it attempts to ex
 from the PDF and applies the recognition on it. This seems to work fine with most scanner-produced one-page PDFs, but
 has not been tested extensively.
 
+If your Tesseract installation has the "legacy" `*.traineddata` models installed (in its `tessdata` directory), consider running 
+
+    $ mrz --legacy <filename>
+
+This will enable the "legacy" recognizer which, despite the name, seems to work better for MRZ recognition. If you do not know
+whether you have the relevant files, just try running the command above and see whether you get an error. 
+
 In order to use the recognition function in Python code, simply do::
 
     >> from passporteye import read_mrz
@@ -61,10 +68,14 @@ If you want to have the ROI reported alongside the MRZ, call the ``read_mrz`` fu
 
 The ROI can then be accessed as ``mrz.aux['roi']`` -- it is a numpy ndarray, representing the (grayscale) image region where the OCR was applied.
 
+Finally, in order to use the "legacy recognizer", pass the `--oem 0` extra command line argument to Tesseract as follows:
+
+    >> mrz = read_mrz(image_file, extra_cmdline_params='--oem 0')
+
 For more flexibility, you may instead use a ``MRZPipeline`` object, which will provide you access to all intermediate computations as follows::
 
     >> from passporteye.mrz.image import MRZPipeline
-    >> p = MRZPipeline(file)
+    >> p = MRZPipeline(file, extra_cmdline_params='--oem 0')
     >> mrz = p.result
 
 The "pipeline" object stores the intermediate computations in its ``data`` dictionary. Although you need to understand the underlying algorithm

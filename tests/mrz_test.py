@@ -9,65 +9,18 @@ License: MIT
 import io
 from passporteye import read_mrz
 
-def test_read_mrz_td3_jpg_file():
-    mrz = read_mrz('./tests/data/passport-td3.jpg')
-    assert_td3_jpg(mrz)
+def read_img(filename, as_stream=False):
+    file = io.open(filename, "rb", buffering=0) if as_stream else filename
+    return read_mrz(file, extra_cmdline_params='--oem 0')
 
-def test_read_mrz_td3_jpg_stream():
-    byteStream = None
-    mrz = None
-    try:
-        byteStream = io.open('./tests/data/passport-td3.jpg', "rb", buffering=0)
-        mrz = read_mrz(byteStream)
-    finally:
-        if byteStream is not None:
-            byteStream.close()
-    assert_td3_jpg(mrz)
-
-def test_read_mrz_td3_png_file():
-    mrz = read_mrz('./tests/data/passport-td3.png')
-    assert_td3_png(mrz)
-
-def test_read_mrz_td3_png_stream():
-    byteStream = None
-    mrz = None
-    try:
-        byteStream = io.open('./tests/data/passport-td3.png', "rb", buffering=0)
-        mrz = read_mrz(byteStream)
-    finally:
-        if byteStream is not None:
-            byteStream.close()
-    assert_td3_png(mrz)
-
-def test_read_mrz_td2_jpg_file():
-    mrz = read_mrz('./tests/data/passport-td2.jpg')
-    assert_td2_jpg(mrz)
-
-def test_read_mrz_td2_jpg_stream():
-    byteStream = None
-    mrz = None
-    try:
-        byteStream = io.open('./tests/data/passport-td2.jpg', "rb", buffering=0)
-        mrz = read_mrz(byteStream)
-    finally:
-        if byteStream is not None:
-            byteStream.close()
-    assert_td2_jpg(mrz)
-
-def test_read_mrz_td2_png_file():
-    mrz = read_mrz('./tests/data/passport-td2.png')
-    assert_td2_png(mrz)
-
-def test_read_mrz_td2_png_stream():
-    byteStream = None
-    mrz = None
-    try:
-        byteStream = io.open('./tests/data/passport-td2.png', "rb", buffering=0)
-        mrz = read_mrz(byteStream)
-    finally:
-        if byteStream is not None:
-            byteStream.close()
-    assert_td2_png(mrz)
+def test_td2_td3_stream_nonstream():
+    for fn, test_fn in [('./tests/data/passport-td3.jpg', assert_td3_jpg),
+                        ('./tests/data/passport-td3.png', assert_td3_png),
+                        ('./tests/data/passport-td2.jpg', assert_td2_jpg),
+                        ('./tests/data/passport-td2.png', assert_td2_png),
+                       ]:
+        for as_stream in [True, False]:
+            test_fn(read_img(fn, as_stream=as_stream))
 
 def assert_td3_jpg(mrz):
     assert mrz is not None

@@ -1,6 +1,11 @@
 Changelog
 ---------
 
+    - (1.4.0)
+        - Issue#27: Reverted the forced use of legacy recognizer in Tesseract
+        - Changed error handling in mrz and evaluate_mrz scripts.
+        - Added --legacy parameter to mrz and evaluate_mrz scripts to explicitly enable legacy recognizer.
+    
     - (1.3.0)
         - PR#25, Issue#24: Support reading images from stream. Added dependency on ImageIO.
         - Tesseract forced to use legacy mode by default (as it seems to work better than the LSTM one).
