@@ -44,7 +44,7 @@ Note that the tool provides a limited support for PDF files -- it attempts to ex
 from the PDF and applies the recognition on it. This seems to work fine with most scanner-produced one-page PDFs, but
 has not been tested extensively.
 
-If your Tesseract installation has the "legacy" `*.traineddata` models installed (in its `tessdata` directory), consider running 
+If your Tesseract installation has the "legacy" `*.traineddata` models installed (in its `tessdata` directory), consider running::
 
     $ mrz --legacy <filename>
 
@@ -68,7 +68,7 @@ If you want to have the ROI reported alongside the MRZ, call the ``read_mrz`` fu
 
 The ROI can then be accessed as ``mrz.aux['roi']`` -- it is a numpy ndarray, representing the (grayscale) image region where the OCR was applied.
 
-Finally, in order to use the "legacy recognizer", pass the `--oem 0` extra command line argument to Tesseract as follows:
+Finally, in order to use the "legacy recognizer", pass the `--oem 0` extra command line argument to Tesseract as follows::
 
     >> mrz = read_mrz(image_file, extra_cmdline_params='--oem 0')
 
