@@ -27,6 +27,8 @@ def ocr(img, mrz_mode=True, extra_cmdline_params=''):
                     "--oem 0" is the parameter you might want to pass. This selects the Tesseract's "legacy" OCR engine, which often seems
                     to work better than the new LSTM-based one.
     """
+    if img is None or img.shape[-1] == 0:  # Issue #34
+        return ''
     input_file_name = '%s.bmp' % _tempnam()
     output_file_name_base = '%s' % _tempnam()
     output_file_name = "%s.txt" % output_file_name_base

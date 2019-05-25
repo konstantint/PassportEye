@@ -1,6 +1,6 @@
 Changelog
 ---------
-
+    - (1.4.1) Issue#34
     - (1.4.0)
         - Issue#27: Reverted the forced use of legacy recognizer in Tesseract
         - Changed error handling in mrz and evaluate_mrz scripts.

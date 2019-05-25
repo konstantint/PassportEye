@@ -7,6 +7,7 @@ Author: Konstantin Tretyakov
 License: MIT
 '''
 from pkg_resources import resource_filename
+import numpy as np
 from skimage.io import imread
 from passporteye.util.ocr import ocr
 
@@ -27,3 +28,8 @@ def test_ocr():
 	# Since Tesseract 4.0 this test does not work, at least I did not find the way to limit the output character set
     #s = ocr_file('tesseract-test1.jpg', True)
     #assert s.startswith('T116 10111610 1111011111 110111') or s.startswith('T116 111111610 1111011111 110111')
+
+def test_issue34():
+	ocr(np.asarray([]))
+	ocr(np.asarray([[]]))
+	ocr(np.asarray([[0]], dtype=np.uint8))
