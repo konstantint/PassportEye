@@ -7,6 +7,7 @@ License: MIT
 '''
 from collections import OrderedDict
 from datetime import datetime
+import re
 
 class MRZ(object):
     """
@@ -174,7 +175,8 @@ class MRZ(object):
             else:
                 self.valid = False
                 self.valid_score = 0
-        except Exception:
+        except Exception as e:
+            raise e
             self.mrz_type = None
             self.valid = False
             self.valid_score = 0
@@ -273,6 +275,12 @@ class MRZ(object):
             b = b + '<'*(36 - len(b))
         self.type = a[0:2]
         self.country = a[2:5]
+
+        # La France ID est different
+        if self.type == 'ID' and self.country == 'FRA':
+            return self._parse_td2_fr(a, b)
+
+        # Standard TD2
         surname_names = a[5:36].split('<<', 1)
         if len(surname_names) < 2:
             surname_names += ['']
@@ -300,6 +308,75 @@ class MRZ(object):
         self.valid_number, self.valid_date_of_birth, self.valid_expiration_date, self.valid_composite = self.valid_check_digits
         return self.valid_score == 100
 
+    # Baed on https://en.wikipedia.org/wiki/National_identity_card_(France)#Machine-readable_zone
+    # We do not perform digit validation
+    def _parse_td2_fr(self, a, b):
+        # Supports multi surname just in case
+        surnames = a[5:36]
+        surnames_clean = surnames[:-6]
+        self.surname = self.parse_french_names(surnames_clean.split('<')[0])
+
+        year_of_issuance = b[0:2]
+        department_of_issuance = b[4:6]
+        self.check_number = b[13]
+        self.names = self.parse_french_names(b[13:27])
+        self.date_of_birth = self.force_conversion(b[27:33], False)
+        self.sex = b[34]
+        self.nationality = 'FRA'
+        self.optional1 = 'NA'
+        self.optional2 = 'NA'
+        self.number = self.force_conversion(b[0:13], False)
+        self.check_date_of_birth = 'NA'
+        self.check_number = 'NA'
+        self.check_expiration_date = 'NA'
+        self.check_composite = 'NA'
+        self.valid_number, self.valid_date_of_birth, \
+        self.valid_expiration_date, self.valid_composite = self.valid_check_digits = [True, True, True, True]
+
+        # We assume expiration rate of issue plus 10 years for the ones issued before 14 15 years after (Wikipedia)
+        issue_year = b[0:2]
+        issue_month = b[2:4]
+
+        years_of_validity = 10 if issue_year < '15' else 15
+        expiration_year = "{:02d}".format(int(issue_year) + years_of_validity)
+
+        self.expiration_date = "{}{}01".format(expiration_year, issue_month)
+
+        self.valid_score = 100
+
+        # We penalise any an text wrongly parsed
+        only_text = [self.names, self.surname, self.sex, self.nationality]
+        for t in only_text:
+            if bool(re.search(r'\d', t)):
+                self.valid_score -= 10
+
+        only_number = [self.date_of_birth, self.expiration_date, self.number]
+        for t in only_number:
+            if not t.isdigit():
+                self.valid_score -= 10
+
+        return True
+
+    def force_conversion(self, text, to_text=True):
+        substitutions = {"0": "O", "1": "I", "4": "A", "5": "S", "8": "B"}
+
+        if to_text:
+            for k, v in substitutions.items():
+                text = text.replace(k, v)
+
+        if not to_text:
+            inv_substitutions = {v: k for k, v in substitutions.items()}
+            for k, v in inv_substitutions.items():
+                text = text.replace(k, v)
+
+        return text
+
+    def parse_french_names(self, name):
+        name_with_reduced_separators = re.sub('<+', '<<', name)
+
+        name_tokens = name_with_reduced_separators.split('<<')
+        name_tokens = [token for token in name_tokens if token != '']
+        return self.force_conversion(' '.join(name_tokens))
 
     def _parse_td3(self, a, b):
         len_a, len_b = len(a), len(b)
