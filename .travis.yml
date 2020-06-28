@@ -1,8 +1,5 @@
 language: python
 python:
-  - "2.7"
-  - "3.4"
-  - "3.5"
   - "3.6"
   - "3.7"
 # Two lines below needed for testing Py3.7: https://github.com/travis-ci/travis-ci/issues/9069#issuecomment-425720905

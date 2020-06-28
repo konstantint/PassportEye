@@ -1,6 +1,12 @@
 Changelog
 ---------
-    - (1.4.1) Issue#34
+    - (2.0.0)
+        - PR#50: Remove pdfminer3k, as pdfminer now supports Python 3.
+          The new PDFMiner does not support Python 2 any more, however. As a consequence PassportEye now also
+          requires Python3.6 or above as of this release. Hence the major version number change, otherwise
+          the internals are all the same.
+    - (1.4.1)
+        - Issue#34: ValueError: zero-size array to reduction operation fmin which has no identity)
     - (1.4.0)
         - Issue#27: Reverted the forced use of legacy recognizer in Tesseract
         - Changed error handling in mrz and evaluate_mrz scripts.
@@ -11,9 +17,9 @@ Changelog
         - Tesseract forced to use legacy mode by default (as it seems to work better than the LSTM one).
         - Result of `read_mrz`, when not None, now also provides access to the OCR-ed text in `mrz.aux['text']`. 
     
-	- (1.2.4) PR#22: Extra command line parameters for Tesseract
-	- (1.2.3) Issue #21: Added correct sklearn version requirement.
-	- (1.2.2) PR#18: fixed skimage warnings
+    - (1.2.4) PR#22: Extra command line parameters for Tesseract
+    - (1.2.3) Issue #21: Added correct sklearn version requirement.
+    - (1.2.2) PR#18: fixed skimage warnings
     - (1.2.1)
         - PR#12: Validate date format and validity as an additional check on top of the check digit
         - PR#15: debugging '--psm' syntax for tesseract 4

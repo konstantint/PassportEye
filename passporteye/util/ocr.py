@@ -6,7 +6,6 @@ Author: Konstantin Tretyakov
 License: MIT
 '''
 
-import sys
 import tempfile
 import numpy as np
 from imageio import imwrite
@@ -52,10 +51,7 @@ def ocr(img, mrz_mode=True, extra_cmdline_params=''):
                                   lang=None,
                                   config=config)
         
-        if sys.version_info.major == 3:
-            f = open(output_file_name, encoding='utf-8')
-        else:
-            f = open(output_file_name)
+        f = open(output_file_name, encoding='utf-8')
         
         try:
             return f.read().strip()
