@@ -6,14 +6,10 @@ License: MIT
 '''
 
 import sys
-PY2 = sys.version_info.major == 2
 
-if PY2:
-    from pdfminer.pdfparser import PDFParser
-    from pdfminer.pdfdocument import PDFDocument
-    from pdfminer.pdfpage import PDFPage
-else:
-    from pdfminer.pdfparser import PDFParser, PDFDocument, PDFPage
+from pdfminer.pdfparser import PDFParser
+from pdfminer.pdfdocument import PDFDocument
+from pdfminer.pdfpage import PDFPage
 from pdfminer.pdfinterp import PDFResourceManager
 from pdfminer.pdfinterp import PDFPageInterpreter
 from pdfminer.converter import PDFPageAggregator
@@ -36,17 +32,11 @@ def extract_first_jpeg_in_pdf(fstream):
     :return: binary stream, containing the whole contents of the JPEG image or None if extraction failed.
     """
     parser = PDFParser(fstream)
-    if PY2:
-        document = PDFDocument(parser)
-    else:
-        document = PDFDocument()
-        parser.set_document(document)
-        document.set_parser(parser)
-        document.initialize('')
+    document = PDFDocument(parser)
     rsrcmgr = PDFResourceManager()
     device = PDFPageAggregator(rsrcmgr)
     interpreter = PDFPageInterpreter(rsrcmgr, device)
-    pages = PDFPage.create_pages(document) if PY2 else document.get_pages()
+    pages = PDFPage.create_pages(document)
     for page in pages:
         interpreter.process_page(page)
         layout = device.result
