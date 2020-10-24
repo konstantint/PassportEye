@@ -30,6 +30,8 @@ may take time or fail sometimes for various reasons (e.g. lack of necessary libr
 In addition, you must have the `Tesseract OCR <https://github.com/tesseract-ocr>`_ installed and added to the system path: the ``tesseract`` tool must be 
 accessible at the command line.
 
+PassportEye requires Python version 3.6 or higher.
+
 Usage
 -----
 
