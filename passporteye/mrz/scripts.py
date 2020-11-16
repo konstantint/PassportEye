@@ -19,7 +19,7 @@ import pkg_resources
 from skimage import io
 from pytesseract.pytesseract import TesseractNotFoundError, TesseractError
 import passporteye
-from .image import read_mrz
+from .image import read_mrz, extract_rois
 
 
 def process_file(params):
@@ -144,9 +144,23 @@ def mrz():
                         'your Tesseract installation includes the legacy *.traineddata files. You can download them at '
                         'https://github.com/tesseract-ocr/tesseract/wiki/Data-Files#data-files-for-version-400-november-29-2016')
     parser.add_argument('-r', '--save-roi', default=None,
-                        help='Output the region of the image that is detected to contain the MRZ to the given png file')
+                        help='Output the region of the image that is detected to contain the MRZ to the given png file. '
+                        'With --roi-only, this is a directory, and the files created will be at 1.png, 2.png, ...')
+    parser.add_argument('--roi-only', action='store_true', help='Only extract the ROIs to png files')
     parser.add_argument('--version', action='version', version='PassportEye MRZ v%s' % passporteye.__version__)
     args = parser.parse_args()
+
+    if args.roi_only:
+        rois = extract_rois(args.filename)
+        roi_dir = '.'
+        if args.save_roi is not None:
+            roi_dir = args.save_roi
+            os.makedirs(roi_dir, exist_ok=True)
+
+        for n, img in enumerate(rois, 1):
+            roi_fn = '%d.png' % (n)
+            io.imsave(os.path.join(roi_dir, roi_fn), img)
+        return
 
     try:
         extra_params = '--oem 0' if args.legacy else ''
