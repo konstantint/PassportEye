@@ -49,7 +49,7 @@ class MRZ(object):
         MRVA and MRVB are the same as TD3 except personal_number and check_composite (which are not present)
 
         The field aux is a dictionary of additional data that may be associated with MRZ by OCR code,
-        e.g. aux['roi'], aux['box'] or aux['text'] may be used to carry around the part of the image that was used
+        e.g. aux['roi'], aux['box'] or aux['raw_text'] may be used to carry around the part of the image that was used
         to extract the information, aux['method'] to mark the method used, etc.
 
     # Valid ID card (TD1)
@@ -116,7 +116,10 @@ class MRZ(object):
     @staticmethod
     def from_ocr(mrz_ocr_string):
         """Given a single string which is output from an OCR routine, cleans it up using MRZ.ocr_cleanup and creates a MRZ object"""
-        return MRZ(MRZOCRCleaner.apply(mrz_ocr_string))
+        result = MRZ(MRZOCRCleaner.apply(mrz_ocr_string))
+        result.aux['text'] = mrz_ocr_string     # Deprecated field, will be removed in future versions
+        result.aux['raw_text'] = mrz_ocr_string  # New field
+        return result
 
     def __repr__(self):
         if self.valid:
@@ -192,7 +195,8 @@ class MRZ(object):
         result = OrderedDict()
         result['mrz_type'] = self.mrz_type
         result['valid_score'] = self.valid_score
-        result['raw_text'] = self.aux['text']
+        if 'raw_text' in self.aux:
+            result['raw_text'] = self.aux['raw_text']
         if self.mrz_type is not None:
             result['type'] = self.type
             result['country'] = self.country

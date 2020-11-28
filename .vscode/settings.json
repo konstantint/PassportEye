@@ -13,11 +13,10 @@
         ".pytest_cache": true,
         "**/*.pyc": true
     },
-    "python.pythonPath": "${workspaceFolder}\\venv3\\Scripts\\python.exe",
-    "python.unitTest.pyTestEnabled": true,
+    "python.testing.pytestEnabled": true,
     "python.linting.pylintEnabled": true,
     "python.linting.enabled": true,
     "python.linting.pylintUseMinimalCheckers": false,
-    "python.linting.pylintPath": "${workspaceFolder}\\venv3\\Scripts\\pylint.exe",
+    "python.linting.pylintPath": "${workspaceFolder}\\venv36\\Scripts\\pylint.exe",
     // https://github.com/Microsoft/vscode-python/issues/435
 }

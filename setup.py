@@ -4,7 +4,6 @@ PassportEye: Python tools for image processing of identification documents
 Author: Konstantin Tretyakov
 License: MIT
 '''
-import sys
 from setuptools import setup, find_packages
 
 
@@ -14,7 +13,7 @@ setup(name='PassportEye',
       long_description=open("README.rst").read(),
       classifiers=[ # Get strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers
           'Development Status :: 4 - Beta',
-          'Programming Language :: Python',
+          'Programming Language :: Python :: 3 :: Only',
           'Topic :: Scientific/Engineering :: Image Recognition',
           'License :: OSI Approved :: MIT License',
           'Intended Audience :: Developers',
@@ -38,6 +37,7 @@ setup(name='PassportEye',
       },
       entry_points={
           'console_scripts': ['evaluate_mrz=passporteye.mrz.scripts:evaluate_mrz',
-                              'mrz=passporteye.mrz.scripts:mrz']
+                              'mrz=passporteye.mrz.scripts:mrz',
+                              'extract_mrz_rois=passporteye.mrz.scripts:extract_mrz_rois']
       }
      )

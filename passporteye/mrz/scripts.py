@@ -17,9 +17,10 @@ import time
 from collections import Counter
 import pkg_resources
 from skimage import io
+import numpy as np
 from pytesseract.pytesseract import TesseractNotFoundError, TesseractError
 import passporteye
-from .image import read_mrz, extract_rois
+from .image import read_mrz, MRZPipeline
 
 
 def process_file(params):
@@ -144,23 +145,9 @@ def mrz():
                         'your Tesseract installation includes the legacy *.traineddata files. You can download them at '
                         'https://github.com/tesseract-ocr/tesseract/wiki/Data-Files#data-files-for-version-400-november-29-2016')
     parser.add_argument('-r', '--save-roi', default=None,
-                        help='Output the region of the image that is detected to contain the MRZ to the given png file. '
-                        'With --roi-only, this is a directory, and the files created will be at 1.png, 2.png, ...')
-    parser.add_argument('--roi-only', action='store_true', help='Only extract the ROIs to png files')
+                        help='Output the region of the image that is detected to contain the MRZ to the given png file.')
     parser.add_argument('--version', action='version', version='PassportEye MRZ v%s' % passporteye.__version__)
     args = parser.parse_args()
-
-    if args.roi_only:
-        rois = extract_rois(args.filename)
-        roi_dir = '.'
-        if args.save_roi is not None:
-            roi_dir = args.save_roi
-            os.makedirs(roi_dir, exist_ok=True)
-
-        for n, img in enumerate(rois, 1):
-            roi_fn = '%d.png' % (n)
-            io.imsave(os.path.join(roi_dir, roi_fn), img)
-        return
 
     try:
         extra_params = '--oem 0' if args.legacy else ''
@@ -179,10 +166,31 @@ def mrz():
     d['filename'] = filename
 
     if args.save_roi is not None and mrz_ is not None and 'roi' in mrz_.aux:
-        io.imsave(args.save_roi, mrz_.aux['roi'])
+        io.imsave(args.save_roi, (mrz_.aux['roi'] * 255).astype(np.uint8))
 
     if not args.json:
         for k in d:
-            print("%s\t%s" % (k, str(d[k])))
+            print("%s\t%s" % (k, str(d[k]).replace('\n', ' ')))
     else:
         print(json.dumps(d, indent=2))
+
+
+def extract_mrz_rois():
+    """
+    Command-line script for extracting all potential MRZ regions from a given image as images
+    """
+    parser = argparse.ArgumentParser(description='Extract all potential MRZ regions from a given image and output as individual PNG files.')
+    parser.add_argument('filename')
+    parser.add_argument('-d', '--output-dir', default='.',
+                        help='The directory where the images for the potential MRZ regions will be output (default is the current directory). '
+                        'The files created will be named 1.png, 2.png, ...')
+    parser.add_argument('-c', '--create-dir', action='store_true', help='Force the creation of the directory (and all parents) if it does not exist.')
+    parser.add_argument('--version', action='version', version='PassprtEye extract_mrz_rois v%s' % passporteye.__version__)
+    args = parser.parse_args()
+
+    rois = MRZPipeline(args.filename)['rois']
+    if args.create_dir:
+        os.makedirs(args.output_dir, exist_ok=True)
+
+    for n, img in enumerate(rois, 1):
+        io.imsave(os.path.join(args.output_dir, '%d.png' % n), (img * 255).astype(np.uint8))

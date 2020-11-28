@@ -1,5 +1,8 @@
 Changelog
 ---------
+    - (2.1.0)
+        - PR#54: add command to only extract the candidate ROIs
+          The package now provides the `extract_mrz_rois` script.
     - (2.0.0)
         - PR#50: Remove pdfminer3k, as pdfminer now supports Python 3.
           The new PDFMiner does not support Python 2 any more, however. As a consequence PassportEye now also

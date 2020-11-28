@@ -132,7 +132,7 @@ class MRZBoxLocator(object):
 
         # Next sort and leave only max_boxes largest boxes by area
         results.sort(key=lambda x: -x.area)
-        return self._merge_boxes(results[0:self.max_boxes])
+        return self._fixup_boxes(self._merge_boxes(results[0:self.max_boxes]))
 
     def _are_aligned_angles(self, b1, b2):
         "Are two boxes aligned according to their angle?"
@@ -170,30 +170,29 @@ class MRZBoxLocator(object):
             pass
         return box_list
 
+    def _fixup_boxes(self, box_list):
+        """If the box's angle is np.pi/2 +- 0.01, we shall round it to np.pi/2.
+
+        This way image extraction is fast and introduces no distortions.
+        and this may be more important than being perfectly straight
+        similar for 0 angle.
+        The box_list is fixed in-place (but also returned).
+        """
+        for box in box_list:
+            if abs(abs(box.angle) - np.pi / 2) <= 0.01:
+                box.angle = np.pi / 2
+            if abs(box.angle) <= 0.01:
+                box.angle = 0.0
+        return box_list
 
 class ExtractAllBoxes(object):
     """Extract all the images from the boxes, for external OCR processing"""
 
     __provides__ = ['rois']
-    __depends__ = ['boxes', 'img', 'img_small', 'scale_factor']
+    __depends__ = ['boxes', 'img', 'scale_factor']
 
-    def __call__(self, boxes, img, img_small, scale_factor):
-        rois = []
-        scale = 1.0 / scale_factor
-
-        for box in boxes:
-            # If the box's angle is np.pi/2 +- 0.01, we shall round it to np.pi/2:
-            # this way image extraction is fast and introduces no distortions.
-            # and this may be more important than being perfectly straight
-            # similar for 0 angle
-            if abs(abs(box.angle) - np.pi / 2) <= 0.01:
-                box.angle = np.pi / 2
-            if abs(box.angle) <= 0.01:
-                box.angle = 0.0
-
-            roi = box.extract_from_image(img, scale)
-            rois.append(roi)
-        return rois
+    def __call__(self, boxes, img, scale_factor):
+        return [box.extract_from_image(img, 1.0 / scale_factor) for box in boxes]
 
 
 class FindFirstValidMRZ(object):
@@ -239,16 +238,6 @@ class BoxToMRZ(object):
     def __call__(self, box, img, img_small, scale_factor):
         img = img if self.use_original_image else img_small
         scale = 1.0 / scale_factor if self.use_original_image else 1.0
-
-        # If the box's angle is np.pi/2 +- 0.01, we shall round it to np.pi/2:
-        # this way image extraction is fast and introduces no distortions.
-        # and this may be more important than being perfectly straight
-        # similar for 0 angle
-        if abs(abs(box.angle) - np.pi / 2) <= 0.01:
-            box.angle = np.pi / 2
-        if abs(box.angle) <= 0.01:
-            box.angle = 0.0
-
         roi = box.extract_from_image(img, scale)
         text = ocr(roi, extra_cmdline_params=self.extra_cmdline_params)
 
@@ -257,7 +246,7 @@ class BoxToMRZ(object):
             roi = roi[::-1, ::-1]
             text = ocr(roi, extra_cmdline_params=self.extra_cmdline_params)
 
-        if not '<' in text:
+        if '<' not in text:
             # Assume this is unrecoverable and stop here (TODO: this may be premature, although it saves time on useless stuff)
             return roi, text, MRZ.from_ocr(text)
 
@@ -346,6 +335,9 @@ class MRZPipeline(Pipeline):
         self.add_component('mrz', FindFirstValidMRZ(extra_cmdline_params=extra_cmdline_params))
         self.add_component('other_max_width', TryOtherMaxWidth())
 
+        # Step used by extract_mrz_rois (not even invoked by the standard result method)
+        self.add_component('extractor', ExtractAllBoxes())
+
     @property
     def result(self):
         return self['mrz_final']
@@ -361,35 +353,6 @@ def read_mrz(file, save_roi=False, extra_cmdline_params=''):
     """
     p = MRZPipeline(file, extra_cmdline_params)
     mrz = p.result
-
-    if mrz is not None:
-        mrz.aux['text'] = p['text']
-        if save_roi:
-            mrz.aux['roi'] = p['roi']
+    if mrz is not None and save_roi:
+        mrz.aux['roi'] = p['roi']
     return mrz
-
-class ROIPipeline(Pipeline):
-    """This is a pipeline that just extracts the ROIs"""
-
-    def __init__(self, file):
-        super(ROIPipeline, self).__init__()
-        self.version = '1.0'  # In principle we might have different pipelines in use, so possible backward compatibility is an issue
-        self.file = file
-        self.add_component('loader', Loader(file))
-        self.add_component('scaler', Scaler())
-        self.add_component('boone', BooneTransform())
-        self.add_component('box_locator', MRZBoxLocator())
-        self.add_component('extractor', ExtractAllBoxes())
-
-    @property
-    def result(self):
-        return self['rois']
-
-
-def extract_rois(file: str):
-    """The main interface function to this module, encapsulating the recognition pipeline.
-       Given an image filename, runs MRZPipeline on it, returning the parsed MRZ object.
-
-    :param file: A filename or a stream to read the file data from.
-    """
-    return ROIPipeline(file).result
