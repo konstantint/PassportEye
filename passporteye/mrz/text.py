@@ -9,6 +9,7 @@ License: MIT
 from collections import OrderedDict
 from datetime import datetime
 
+
 class MRZ(object):
     """
     A simple parser for a Type1 or Type3 Machine-readable zone strings from identification documents.
@@ -101,6 +102,7 @@ class MRZ(object):
     >>> assert m.valid and m.names == 'ISOLDE' and m.surname == 'MUSTERFRAU'
 
     """
+
     def __init__(self, mrz_lines):
         """
         Parse a TD1/TD2/TD3/MRVA/MRVB MRZ from a single newline-separated string or a list of strings.
@@ -110,7 +112,6 @@ class MRZ(object):
         """
         self._parse(mrz_lines)
         self.aux = {}
-
 
     @staticmethod
     def from_ocr(mrz_ocr_string):
@@ -191,6 +192,7 @@ class MRZ(object):
         result = OrderedDict()
         result['mrz_type'] = self.mrz_type
         result['valid_score'] = self.valid_score
+        result['raw_text'] = self.aux['text']
         if self.mrz_type is not None:
             result['type'] = self.type
             result['country'] = self.country
@@ -265,7 +267,6 @@ class MRZ(object):
         self.valid_number, self.valid_date_of_birth, self.valid_expiration_date, self.valid_composite = self.valid_check_digits
         return self.valid_score == 100
 
-
     def _parse_td2(self, a, b):
         len_a, len_b = len(a), len(b)
         if len(a) < 36:
@@ -300,7 +301,6 @@ class MRZ(object):
         self.valid_score = 100*self.valid_score//(40+2+1+1)
         self.valid_number, self.valid_date_of_birth, self.valid_expiration_date, self.valid_composite = self.valid_check_digits
         return self.valid_score == 100
-
 
     def _parse_td3(self, a, b):
         len_a, len_b = len(a), len(b)

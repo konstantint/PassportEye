@@ -4,6 +4,7 @@ PassportEye::Util: Geometry & math utilities
 Author: Konstantin Tretyakov
 License: MIT
 '''
+from collections import OrderedDict
 import numpy as np
 from sklearn.decomposition import PCA
 from matplotlib import pyplot as plt
@@ -184,6 +185,18 @@ class RotatedBox(object):
         # fit output image in new shape
         return ((cols - out_cols) / 2., (rows - out_rows) / 2.)
 
+
+    def to_dict(self):
+        """Converts this object to an (ordered) dictionary of field-value pairs.
+        """
+
+        result = OrderedDict()
+        result["center"] = self.center
+        result["width"] = self.width
+        result["height"] = self.height
+        result["angle"] = self.angle
+        result["points"] = self.points
+        return result
 
     @staticmethod
     def from_points(points, box_type='bb'):
