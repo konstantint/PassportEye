@@ -341,7 +341,7 @@ class MRZ(object):
         self.valid_misc = [a[0] in 'P']
         self.valid_score = 10*sum(self.valid_check_digits) + sum(self.valid_line_lengths) + sum(self.valid_misc) +1
         self.valid_score = 100*self.valid_score//(50+2+1+1)
-        self.valid_number, self.valid_date_of_birth, self.valid_expiration_date, self.valid_personal_number, self.valid_composite = self.valid_check_digits
+        self.valid_number, self.valid_date_of_birth, self.valid_expiration_date, self.valid_composite, self.valid_personal_number = self.valid_check_digits
         return self.valid_score == 100
 
     @staticmethod
