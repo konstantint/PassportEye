@@ -67,7 +67,7 @@ class Scaler(object):
     def __call__(self, img):
         scale_factor = self.max_width / float(img.shape[1])
         if scale_factor <= 1:
-            img_small = transform.rescale(img, scale_factor, mode='constant', multichannel=False, anti_aliasing=True)
+            img_small = transform.rescale(img, scale_factor, mode='constant', channel_axis=None, anti_aliasing=True)
         else:
             scale_factor = 1.0
             img_small = img
@@ -271,7 +271,7 @@ class BoxToMRZ(object):
         the old mrz."""
         if roi.shape[1] <= 700:
             scale_by = int(1050.0 / roi.shape[1] + 0.5)
-            roi_lg = transform.rescale(roi, scale_by, order=filter_order, mode='constant', multichannel=False,
+            roi_lg = transform.rescale(roi, scale_by, order=filter_order, mode='constant', channel_axis=None,
                                        anti_aliasing=True)
             new_text = ocr(roi_lg, extra_cmdline_params=self.extra_cmdline_params)
             new_mrz = MRZ.from_ocr(new_text)
