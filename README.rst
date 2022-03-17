@@ -28,7 +28,9 @@ Note that `PassportEye` depends on `numpy`, `scipy`, `matplotlib` and `scikit-im
 may take time or fail sometimes for various reasons (e.g. lack of necessary libraries). If this happens, consider installing the dependencies explicitly from the binary packages, such as those provided by the OS distribution or the "wheel" packages. Another convenient option is to use a Python distribution with pre-packaged `numpy`/`scipy`/`matplotlib` binaries (Anaconda Python being a great choice at the moment).
 
 In addition, you must have the `Tesseract OCR <https://github.com/tesseract-ocr>`_ installed and added to the system path: the ``tesseract`` tool must be 
-accessible at the command line.
+accessible at the command line. Note that the most recent version of Tesseract does not by default include its "legacy" model in some installations (e.g. Windows). The legacy model, however
+shows slightly better performance for MRZ text detection according to our tests and is therefore used by default. If the respective model is not installed by default, you should download
+the `eng.traineddata` file [here](https://github.com/tesseract-ocr/tessdata) and replace with it the (smaller) `eng.traineddata` file that came with your installation.
 
 PassportEye requires Python version 3.6 or higher.
 

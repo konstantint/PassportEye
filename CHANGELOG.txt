@@ -1,5 +1,9 @@
 Changelog
 ---------
+    - (2.2.0)
+        - PR#60: Update image.py with channel_axis arg.
+          This bumps the required version of scikit-image up to 0.19.0.
+        - PR#56: Fix wrong valid check in TD3.
     - (2.1.0)
         - PR#54: add command to only extract the candidate ROIs
           The package now provides the `extract_mrz_rois` script.
