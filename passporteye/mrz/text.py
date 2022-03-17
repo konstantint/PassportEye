@@ -260,15 +260,18 @@ class MRZ(object):
         self.names = self.names.replace('<', ' ').strip()
         self.surname = self.surname.replace('<', ' ').strip()
 
-        self.valid_check_digits = [MRZCheckDigit.compute(self.number) == self.check_number,
-                                   MRZCheckDigit.compute(self.date_of_birth) == self.check_date_of_birth and MRZ._check_date(self.date_of_birth),
-                                   MRZCheckDigit.compute(self.expiration_date) == self.check_expiration_date and MRZ._check_date(self.expiration_date),
-                                   MRZCheckDigit.compute(a[5:30] + b[0:7] + b[8:15] + b[18:29]) == self.check_composite]
+        self.valid_number = MRZCheckDigit.compute(self.number) == self.check_number
+        self.valid_date_of_birth = MRZCheckDigit.compute(self.date_of_birth) == self.check_date_of_birth and MRZ._check_date(self.date_of_birth)
+        self.valid_expiration_date = MRZCheckDigit.compute(self.expiration_date) == self.check_expiration_date and MRZ._check_date(self.expiration_date)
+        self.valid_composite = MRZCheckDigit.compute(a[5:30] + b[0:7] + b[8:15] + b[18:29]) == self.check_composite
+        self.valid_check_digits = [self.valid_number,
+                                   self.valid_date_of_birth,
+                                   self.valid_expiration_date,
+                                   self.valid_composite]
         self.valid_line_lengths = [len_a == 30, len_b == 30, len_c == 30]
         self.valid_misc = [a[0] in 'IAC']
         self.valid_score = 10*sum(self.valid_check_digits) + sum(self.valid_line_lengths) + sum(self.valid_misc) + 1
         self.valid_score = 100*self.valid_score//(40+3+1+1)
-        self.valid_number, self.valid_date_of_birth, self.valid_expiration_date, self.valid_composite = self.valid_check_digits
         return self.valid_score == 100
 
     def _parse_td2(self, a, b):
@@ -295,15 +298,18 @@ class MRZ(object):
         self.check_expiration_date = b[27]
         self.optional1 = b[28:35]
         self.check_composite = b[35]
-        self.valid_check_digits = [MRZCheckDigit.compute(self.number) == self.check_number,
-                                   MRZCheckDigit.compute(self.date_of_birth) == self.check_date_of_birth and MRZ._check_date(self.date_of_birth),
-                                   MRZCheckDigit.compute(self.expiration_date) == self.check_expiration_date and MRZ._check_date(self.expiration_date),
-                                   MRZCheckDigit.compute(b[0:10] + b[13:20] + b[21:35]) == self.check_composite]
+        self.valid_number = MRZCheckDigit.compute(self.number) == self.check_number
+        self.valid_date_of_birth = MRZCheckDigit.compute(self.date_of_birth) == self.check_date_of_birth and MRZ._check_date(self.date_of_birth)
+        self.valid_expiration_date = MRZCheckDigit.compute(self.expiration_date) == self.check_expiration_date and MRZ._check_date(self.expiration_date)
+        self.valid_composite = MRZCheckDigit.compute(b[0:10] + b[13:20] + b[21:35]) == self.check_composite
+        self.valid_check_digits = [self.valid_number,
+                                   self.valid_date_of_birth,
+                                   self.valid_expiration_date,
+                                   self.valid_composite]
         self.valid_line_lengths = [len_a == 36, len_b == 36]
         self.valid_misc = [a[0] in 'ACI']
         self.valid_score = 10*sum(self.valid_check_digits) + sum(self.valid_line_lengths) + sum(self.valid_misc) +1
         self.valid_score = 100*self.valid_score//(40+2+1+1)
-        self.valid_number, self.valid_date_of_birth, self.valid_expiration_date, self.valid_composite = self.valid_check_digits
         return self.valid_score == 100
 
     def _parse_td3(self, a, b):
@@ -331,17 +337,21 @@ class MRZ(object):
         self.personal_number = b[28:42]
         self.check_personal_number = b[42]
         self.check_composite = b[43]
-        self.valid_check_digits = [MRZCheckDigit.compute(self.number) == self.check_number,
-                                   MRZCheckDigit.compute(self.date_of_birth) == self.check_date_of_birth and MRZ._check_date(self.date_of_birth),
-                                   MRZCheckDigit.compute(self.expiration_date) == self.check_expiration_date and MRZ._check_date(self.expiration_date),
-                                   MRZCheckDigit.compute(b[0:10] + b[13:20] + b[21:43]) == self.check_composite,
-                                   ((self.check_personal_number == '<' or self.check_personal_number == '0') and self.personal_number == '<<<<<<<<<<<<<<') # PN is optional
-                                   or MRZCheckDigit.compute(self.personal_number) == self.check_personal_number]
+        self.valid_number = MRZCheckDigit.compute(self.number) == self.check_number
+        self.valid_date_of_birth = MRZCheckDigit.compute(self.date_of_birth) == self.check_date_of_birth and MRZ._check_date(self.date_of_birth)
+        self.valid_expiration_date = MRZCheckDigit.compute(self.expiration_date) == self.check_expiration_date and MRZ._check_date(self.expiration_date)
+        self.valid_composite = MRZCheckDigit.compute(b[0:10] + b[13:20] + b[21:43]) == self.check_composite
+        self.valid_personal_number = (((self.check_personal_number == '<' or self.check_personal_number == '0') and self.personal_number == '<<<<<<<<<<<<<<') # PN is optional
+                                   or MRZCheckDigit.compute(self.personal_number) == self.check_personal_number)
+        self.valid_check_digits = [self.valid_number,
+                                   self.valid_date_of_birth,
+                                   self.valid_expiration_date,
+                                   self.valid_composite,
+                                   self.valid_personal_number]
         self.valid_line_lengths = [len_a == 44, len_b == 44]
         self.valid_misc = [a[0] in 'P']
         self.valid_score = 10*sum(self.valid_check_digits) + sum(self.valid_line_lengths) + sum(self.valid_misc) +1
         self.valid_score = 100*self.valid_score//(50+2+1+1)
-        self.valid_number, self.valid_date_of_birth, self.valid_expiration_date, self.valid_composite, self.valid_personal_number = self.valid_check_digits
         return self.valid_score == 100
 
     @staticmethod
