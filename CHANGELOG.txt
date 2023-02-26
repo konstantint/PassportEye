@@ -1,5 +1,7 @@
 Changelog
 ---------
+    - (2.2.1)
+        - Issue#67: Fixed extraction logic for "ROI" boxes.
     - (2.2.0)
         - PR#60: Update image.py with channel_axis arg.
           This bumps the required version of scikit-image up to 0.19.0.

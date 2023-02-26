@@ -177,12 +177,14 @@ class RotatedBox(object):
         maxc = corners[:, 0].max()
         maxr = corners[:, 1].max()
 
-        # SKImage 0.11 version
-        out_rows = maxr - minr + 1
-        out_cols = maxc - minc + 1
-
         # fit output image in new shape
-        return ((cols - out_cols) / 2., (rows - out_rows) / 2.)
+        translation = (minc, minr)
+        tform4 = transform.SimilarityTransform(translation=translation)
+        tform = tform4 + tform
+        tform.params[2] = (0, 0, 1)
+
+        # Compute the shift of the transformed center wrt original
+        return (ctr - tform.inverse(ctr)).ravel().tolist()
 
     @staticmethod
     def from_points(points, box_type='bb'):
