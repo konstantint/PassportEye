@@ -96,7 +96,7 @@ Development
 
 If you plan to develop or debug the package, consider installing it by running::
 
-    $ pip install -e .[dev]
+    $ pip install -e ".[dev]"
 
 This will install the package in "editable" mode and add a couple of useful extras (such as `pytest`). 
 You can then run the tests by typing::

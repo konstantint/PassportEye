@@ -25,7 +25,7 @@ class RotatedBox(object):
 
         :param points: This parameter may be used to indicate the set of points used to create the box.
         """
-        self.center = np.asfarray(center)
+        self.center = np.asarray(center, dtype=np.float64)
         self.width = width
         self.height = height
         self.angle = angle
@@ -57,7 +57,7 @@ class RotatedBox(object):
         >>> assert RotatedBox([2, 2], 2, 1, 0.1).rotated([1, 1], np.pi/2).approx_equal([0, 2], 2, 1, np.pi/2+0.1)
         """
         rot = np.array([[np.cos(angle), np.sin(angle)], [-np.sin(angle), np.cos(angle)]])
-        t = np.asfarray(rotation_center)
+        t = np.asarray(rotation_center, dtype=np.float64)
         new_c = np.dot(rot.T, (self.center - t)) + t
         return RotatedBox(new_c, self.width, self.height, (self.angle+angle) % (np.pi*2))
 
@@ -213,7 +213,7 @@ class RotatedBox(object):
         >>> assert RotatedBox.from_points([[0,0], [1,1.5], [2,0]]).approx_equal([1, 0.75], 2, 1.5, 0)
         >>> assert RotatedBox.from_points([[0,0], [0,1], [1,1]]).approx_equal([0.25, 0.75], np.sqrt(2), np.sqrt(2)/2, np.pi/4)
         """
-        points = np.asfarray(points)
+        points = np.asarray(points, dtype=np.float64)
         if points.shape[0] == 1:
             return RotatedBox(points[0], width=0.0, height=0.0, angle=0.0, points=points)
 
