@@ -1,5 +1,7 @@
 Changelog
 ---------
+    - (2.2.2)
+        - Issue#76: Fixes necessary to update to numpy 2.0.
     - (2.2.1)
         - Issue#67: Fixed extraction logic for "ROI" boxes.
     - (2.2.0)
