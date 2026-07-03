@@ -1,5 +1,13 @@
 Changelog
 ---------
+    - (Unreleased)
+        - Fixed: BooneTransform used morphology.square(), which scikit-image
+          deprecated in 0.25 (FutureWarning) and will remove entirely in 0.27,
+          which would make read_mrz() raise AttributeError on any environment
+          pinned to scikit-image >= 0.27. Added a small compatibility helper
+          that prefers footprint_rectangle() when available and falls back to
+          square() otherwise, so this keeps working across the full range of
+          scikit-image versions this package claims to support (>= 0.19.0).
     - (2.2.2)
         - Issue#76: Fixes necessary to update to numpy 2.0.
     - (2.2.1)
