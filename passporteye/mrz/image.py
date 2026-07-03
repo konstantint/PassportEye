@@ -74,6 +74,20 @@ class Scaler(object):
         return img_small, scale_factor
 
 
+def _square_footprint(size):
+    """Returns a `size` x `size` morphological footprint.
+
+    scikit-image 0.25 introduced `footprint_rectangle` and deprecated
+    `square`/`rectangle` in favor of it; the old functions are scheduled
+    for removal in 0.27. This keeps us working across the full range of
+    scikit-image versions this package supports (>= 0.19.0) both before
+    and after that removal.
+    """
+    if hasattr(morphology, 'footprint_rectangle'):
+        return morphology.footprint_rectangle((size, size))
+    return morphology.square(size)
+
+
 class BooneTransform(object):
     """Processes `img_small` according to Hans Boone's method
     (http://www.pyimagesearch.com/2015/11/30/detecting-machine-readable-zones-in-passport-images/)
@@ -86,7 +100,7 @@ class BooneTransform(object):
         self.square_size = square_size
 
     def __call__(self, img_small):
-        m = morphology.square(self.square_size)
+        m = _square_footprint(self.square_size)
         img_th = morphology.black_tophat(img_small, m)
         img_sob = abs(filters.sobel_v(img_th))
         img_closed = morphology.closing(img_sob, m)
