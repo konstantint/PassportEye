@@ -277,7 +277,9 @@ class BoxToMRZ(object):
 
         if '<' not in text:
             # Assume this is unrecoverable and stop here (TODO: this may be premature, although it saves time on useless stuff)
-            return roi, text, MRZ.from_ocr(text)
+            mrz = MRZ.from_ocr(text)
+            mrz.aux['method'] = 'direct'  # Issue #55: this MRZ may still be returned as the best one, so it needs a method too
+            return roi, text, mrz
 
         mrz = MRZ.from_ocr(text)
         mrz.aux['method'] = 'direct'
@@ -345,7 +347,7 @@ class TryOtherMaxWidth(object):
             __pipeline__.replace_component('scaler', Scaler(self.other_max_width))
             new_mrz = __pipeline__['mrz']
             if new_mrz is not None:
-                new_mrz.aux['method'] = new_mrz.aux['method'] + '|max_width(%d)' % self.other_max_width
+                new_mrz.aux['method'] = new_mrz.aux.get('method', '') + '|max_width(%d)' % self.other_max_width
             mrz = new_mrz
         return mrz
 

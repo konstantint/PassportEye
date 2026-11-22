@@ -111,3 +111,24 @@ def assert_td2_png(mrz):
     assert mrz.valid_date_of_birth
     assert mrz.valid_expiration_date
     assert mrz.valid_composite
+
+
+def test_issue55_method_always_set(monkeypatch):
+    # OCR output without any '<' (e.g. all fillers misread as 'X') still parses with a positive score.
+    # BoxToMRZ used to return such an MRZ without aux['method'], making TryOtherMaxWidth fail with KeyError.
+    import numpy as np
+    import passporteye.mrz.image as image
+    text = ('PXUTOERIKSSONXXANNAXMARIAXXXXXXXXXXXXXXXXXXX\n'
+            'L898902C36UTO7408122F1204159ZE184226BXXXXX10')
+    monkeypatch.setattr(image, 'ocr', lambda *args, **kwargs: text)
+    box = image.RotatedBox([50, 50], 80, 20, 0)
+    roi, ocr_text, mrz = image.BoxToMRZ()(box, np.ones((100, 100)), np.ones((100, 100)), 1.0)
+    assert mrz.valid_score > 0
+    assert mrz.aux['method'] == 'direct'
+
+    class FakePipeline(dict):
+        def replace_component(self, name, component):
+            pass
+    pipeline = FakePipeline(img_binary=np.zeros((2, 2)), img=np.ones((2, 2)), mrz=mrz)
+    result = image.TryOtherMaxWidth()(None, pipeline)
+    assert result.aux['method'] == 'direct|max_width(1000)'
