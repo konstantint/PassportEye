@@ -7,8 +7,8 @@ License: MIT
 '''
 import io
 import numpy as np
-from skimage import transform, morphology, filters, measure
-from skimage import io as skimage_io # So as not to clash with builtin io
+import imageio.v3 as imageio_v3
+from skimage import transform, morphology, filters, measure, color
 from ..util.pdf import extract_first_jpeg_in_pdf
 from ..util.pipeline import Pipeline
 from ..util.geometry import RotatedBox
@@ -28,16 +28,31 @@ class Loader(object):
         self.pdf_aware = pdf_aware
 
     def _imread(self, file):
-        """Proxy to skimage.io.imread with some fixes."""
-        # For now, we have to select the imageio plugin to read image from byte stream
-        # When ski-image v0.15 is released, imageio will be the default plugin, so this
-        # code can be simplified at that time.  See issue report and pull request:
-        # https://github.com/scikit-image/scikit-image/issues/2889
-        # https://github.com/scikit-image/scikit-image/pull/3126
-        img = skimage_io.imread(file, as_gray=self.as_gray, plugin='imageio')
+        """Reads an image from a filename, bytes or a binary stream.
+
+        This used to be skimage.io.imread(..., plugin='imageio') with a fallback to plugin='matplotlib'.
+        The plugin infrastructure of skimage.io is deprecated since 0.25 and is removed in 0.27,
+        so we call the libraries those plugins wrapped directly, keeping the same behaviour."""
+        img = self._postprocess(imageio_v3.imread(file))
         if img is not None and len(img.shape) != 2:
             # The PIL plugin somewhy fails to load some images
-            img = skimage_io.imread(file, as_gray=self.as_gray, plugin='matplotlib')
+            import matplotlib.image  # pylint: disable=import-outside-toplevel
+            img = self._postprocess(matplotlib.image.imread(file))
+        return img
+
+    def _postprocess(self, img):
+        """Mirrors what skimage.io.imread does after reading: writable array, channels last, optional conversion to gray."""
+        img = np.asarray(img)
+        if not img.flags['WRITEABLE']:
+            img = img.copy()
+        if img.ndim > 2:
+            if img.shape[-1] not in (3, 4) and img.shape[-3] in (3, 4):
+                img = np.swapaxes(img, -1, -3)
+                img = np.swapaxes(img, -2, -3)
+            if self.as_gray:
+                if img.shape[2] == 4:
+                    img = color.rgba2rgb(img)
+                img = color.rgb2gray(img)
         return img
 
     def __call__(self):

@@ -29,7 +29,7 @@ setup(name='PassportEye',
       packages=find_packages(exclude=['examples', 'tests']),
       include_package_data=True,
       zip_safe=False,
-      install_requires=['numpy', 'scipy', 'scikit-image >= 0.19.0', 'imageio', 'scikit-learn', 'matplotlib', 'pytesseract >= 0.2.0',
+      install_requires=['numpy', 'scipy', 'scikit-image >= 0.19.0', 'imageio >= 2.22.0', 'scikit-learn', 'matplotlib', 'pytesseract >= 0.2.0',
                         'pdfminer.six >= 20191110'],
       extras_require={
           "test": ["pytest"],
