@@ -68,7 +68,15 @@ In order to use the recognition function in Python code, simply do::
     >> from passporteye import read_mrz
     >> mrz = read_mrz(image_file)
 
-Where image_file can be either a path to a file on disk, or a byte stream containing image data.
+Where image_file can be a path to a file on disk (an image, or a PDF with an embedded JPEG), the contents of an image file
+(``bytes`` or a binary stream), or the image itself as a numpy array (grayscale, RGB or RGBA) or a PIL Image.
+
+In particular, you can process frames from a camera or a video using OpenCV directly. Note that OpenCV stores color
+images in BGR rather than RGB channel order, so convert them first (passing BGR frames as is noticeably degrades the results)::
+
+    >> import cv2
+    >> ok, frame = cv2.VideoCapture(0).read()
+    >> mrz = read_mrz(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
 
 The returned object (unless it is None, which means no ROI was detected) contains the fields extracted from the MRZ along
 with some metainformation. For the description of the available fields, see the docstring for the `passporteye.mrz.text.MRZ` class.

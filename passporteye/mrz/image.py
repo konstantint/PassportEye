@@ -6,6 +6,7 @@ Author: Konstantin Tretyakov
 License: MIT
 '''
 import io
+import os
 import numpy as np
 import imageio.v3 as imageio_v3
 from skimage import transform, morphology, filters, measure, color
@@ -17,7 +18,15 @@ from .text import MRZ
 
 
 class Loader(object):
-    """Loads `file` to `img`."""
+    """Loads `file` to `img`.
+
+    `file` may be:
+      - a filename (str or os.PathLike) of an image or (if pdf_aware) of a PDF with an embedded JPEG,
+      - the contents of an image file: bytes, bytearray, memoryview, a binary stream, or a 1-D (or Nx1) uint8 numpy array,
+        such as the one returned by OpenCV's cv2.imencode,
+      - an image itself: a numpy array (HxW grayscale, HxWx3 RGB or HxWx4 RGBA, e.g. a frame from OpenCV's VideoCapture.read,
+        which is BGR rather than RGB, see README) or anything numpy can convert to one, such as a PIL Image.
+    """
 
     __depends__ = []
     __provides__ = ['img']
@@ -56,18 +65,32 @@ class Loader(object):
         return img
 
     def __call__(self):
-        if isinstance(self.file, str):
-            if self.pdf_aware and self.file.lower().endswith('.pdf'):
-                with open(self.file, 'rb') as f:
+        file = self.file
+        if isinstance(file, os.PathLike):
+            file = os.fspath(file)
+        if isinstance(file, str):
+            if self.pdf_aware and file.lower().endswith('.pdf'):
+                with open(file, 'rb') as f:
                     img_data = extract_first_jpeg_in_pdf(f)
                 if img_data is None:
                     return None
                 return self._imread(img_data)
             else:
-                return self._imread(self.file)
-        elif isinstance(self.file, (bytes, io.IOBase)):
-            return self._imread(self.file)
-        return None
+                return self._imread(file)
+        elif isinstance(file, (bytes, io.IOBase)):
+            return self._imread(file)
+        elif isinstance(file, (bytearray, memoryview)):
+            return self._imread(bytes(file))
+        elif isinstance(file, np.ndarray) and file.dtype == np.uint8 and (file.ndim == 1 or (file.ndim == 2 and file.shape[1] == 1)):
+            # Encoded image file contents, e.g. the output of cv2.imencode (which has shape Nx1)
+            return self._imread(file.tobytes())
+        elif isinstance(file, np.ndarray) or hasattr(file, '__array_interface__') or hasattr(file, '__array__'):
+            # An image as a pixel array (Issue #38). Copy it, so that the caller's array is never modified or aliased.
+            img = np.array(file)
+            if img.ndim not in (2, 3):
+                raise ValueError("Expected a 2D (grayscale) or 3D (color) image array, got shape %s" % (img.shape,))
+            return self._postprocess(img)
+        raise TypeError("Unsupported input type %s: expected a filename, bytes, a binary stream or an image array" % type(file).__name__)
 
 
 class Scaler(object):
@@ -371,6 +394,8 @@ class MRZPipeline(Pipeline):
 
     @property
     def result(self):
+        if self['img'] is None:  # E.g. a PDF without an embedded JPEG
+            return None
         return self['mrz_final']
 
 
@@ -378,7 +403,8 @@ def read_mrz(file, save_roi=False, extra_cmdline_params=''):
     """The main interface function to this module, encapsulating the recognition pipeline.
        Given an image filename, runs MRZPipeline on it, returning the parsed MRZ object.
 
-    :param file: A filename or a stream to read the file data from.
+    :param file: A filename, file contents (bytes or a binary stream), or the image itself as a numpy array
+                 (e.g. a frame from OpenCV, see README), or a PIL Image. See Loader for details.
     :param save_roi: when this is True, the .aux['roi'] field will contain the Region of Interest where the MRZ was parsed from.
     :param extra_cmdline_params:extra parameters to the ocr.py
     """

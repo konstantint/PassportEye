@@ -1,6 +1,11 @@
 Changelog
 ---------
     - (Unreleased)
+        - Issue#38: read_mrz (and MRZPipeline) now also accept the image itself as a numpy array (e.g. an OpenCV frame
+          converted to RGB, see README) or a PIL Image, image file contents as bytearray/memoryview or as an encoded uint8
+          array (e.g. the output of cv2.imencode), and pathlib.Path filenames.
+        - Fixed: read_mrz on a PDF without an embedded JPEG raised AttributeError instead of returning None.
+          Unsupported input types now raise a TypeError instead of an AttributeError.
         - Issue#55: Fixed KeyError: 'method' in read_mrz when the best candidate's OCR text contained no '<'
           characters (e.g. all fillers misread) and the MRZ was found in the second, max_width(1000) pass.
     - (2.3.0)

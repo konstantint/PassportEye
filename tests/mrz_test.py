@@ -132,3 +132,26 @@ def test_issue55_method_always_set(monkeypatch):
     pipeline = FakePipeline(img_binary=np.zeros((2, 2)), img=np.ones((2, 2)), mrz=mrz)
     result = image.TryOtherMaxWidth()(None, pipeline)
     assert result.aux['method'] == 'direct|max_width(1000)'
+
+
+def test_issue38_input_types():
+    # The image may also be given as a pixel array (e.g. an OpenCV frame), a PIL Image, an encoded buffer or a Path
+    import pathlib
+    import numpy as np
+    import imageio.v3 as iio
+    from PIL import Image
+    fn = './tests/data/passport-td2.png'
+    raw = open(fn, 'rb').read()
+    pixels = iio.imread(fn)
+    pixels_copy = pixels.copy()
+    for file in [pixels, Image.open(fn), np.frombuffer(raw, np.uint8).reshape(-1, 1),  # cv2.imencode output shape
+                 bytearray(raw), memoryview(raw), pathlib.Path(fn)]:
+        assert_td2_png(read_mrz(file, extra_cmdline_params='--oem 0'))
+    assert np.array_equal(pixels, pixels_copy)  # The caller's array is not modified
+
+
+def test_no_image():
+    import pytest
+    assert read_mrz('./tests/data/pdf-with-none.pdf') is None
+    with pytest.raises(TypeError):
+        read_mrz(12345)
