@@ -8,6 +8,8 @@ Changelog
           Unsupported input types now raise a TypeError instead of an AttributeError.
         - Issue#55: Fixed KeyError: 'method' in read_mrz when the best candidate's OCR text contained no '<'
           characters (e.g. all fillers misread) and the MRZ was found in the second, max_width(1000) pass.
+        - Issue#59: A file opened in text mode now raises a TypeError suggesting to open it in binary mode
+          (instead of an obscure error from deep inside imageio). Camera frames are supported since Issue#38.
     - (2.3.0)
         - Fixed: Loader used skimage.io.imread(..., plugin=...), whose plugin infrastructure scikit-image
           deprecated in 0.25 (FutureWarning) and removes in 0.27. Images are now read with imageio.v3 (and

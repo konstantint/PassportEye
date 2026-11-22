@@ -155,3 +155,5 @@ def test_no_image():
     assert read_mrz('./tests/data/pdf-with-none.pdf') is None
     with pytest.raises(TypeError):
         read_mrz(12345)
+    with open('./tests/data/passport-td2.png') as f, pytest.raises(TypeError, match='binary mode'):  # Issue #59
+        read_mrz(f)

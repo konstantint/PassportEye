@@ -77,6 +77,8 @@ class Loader(object):
                 return self._imread(img_data)
             else:
                 return self._imread(file)
+        elif isinstance(file, io.TextIOBase):
+            raise TypeError("The file was opened in text mode, open it in binary mode instead: open(filename, 'rb')")
         elif isinstance(file, (bytes, io.IOBase)):
             return self._imread(file)
         elif isinstance(file, (bytearray, memoryview)):
