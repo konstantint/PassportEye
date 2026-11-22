@@ -43,7 +43,8 @@ def evaluate_mrz():
     parser = argparse.ArgumentParser(description='Run the MRZ OCR recognition algorithm on the sample test data, reporting the quality summary.')
     parser.add_argument('-j', '--jobs', default=1, type=int, help='Number of parallel jobs to run')
     parser.add_argument('-dd', '--data-dir', default=os.path.join(os.path.dirname(os.path.abspath(__file__)), 'testdata'),
-                        help='Read files from this directory instead of the package test files')
+                        help='Read files from this directory instead of the sample images (passporteye/mrz/testdata, '
+                        'only available when running from a source checkout of the repository)')
     parser.add_argument('-sd', '--success-dir', default=None,
                         help='Copy files with successful (nonzero score) extraction results to this directory')
     parser.add_argument('-fd', '--fail-dir', default=None,
@@ -58,6 +59,10 @@ def evaluate_mrz():
                         'https://github.com/tesseract-ocr/tesseract/wiki/Data-Files#data-files-for-version-400-november-29-2016')
     args = parser.parse_args()
     files = sorted(glob.glob(os.path.join(args.data_dir, '*.*')))
+    if not files:
+        parser.error("No files found in %s. The sample images are only available when running from a source checkout "
+                     "of the PassportEye repository (https://github.com/konstantint/PassportEye), they are not part of the "
+                     "installed package. Use --data-dir to process another directory." % args.data_dir)
     if args.limit >= 0:
         files = files[0:args.limit]
 

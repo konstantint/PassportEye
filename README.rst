@@ -27,10 +27,18 @@ The simplest way to install the package is via ``pip``::
 Note that `PassportEye` depends on `numpy`, `scipy`, `matplotlib` and `scikit-image`, among other things. The installation of those requirements, although automatic,
 may take time or fail sometimes for various reasons (e.g. lack of necessary libraries). If this happens, consider installing the dependencies explicitly from the binary packages, such as those provided by the OS distribution or the "wheel" packages. Another convenient option is to use a Python distribution with pre-packaged `numpy`/`scipy`/`matplotlib` binaries (Anaconda Python being a great choice at the moment).
 
-In addition, you must have the `Tesseract OCR <https://github.com/tesseract-ocr>`_ installed and added to the system path: the ``tesseract`` tool must be 
-accessible at the command line. Note that the most recent version of Tesseract does not by default include its "legacy" model in some installations (e.g. Windows). The legacy model, however
-shows slightly better performance for MRZ text detection according to our tests and is therefore used by default. If the respective model is not installed by default, you should download
-the `eng.traineddata` file [here](https://github.com/tesseract-ocr/tessdata) and replace with it the (smaller) `eng.traineddata` file that came with your installation.
+In addition, you must have the `Tesseract OCR <https://github.com/tesseract-ocr>`_ installed and added to the system path: the ``tesseract`` tool must be
+accessible at the command line. Tesseract also needs *language data* (``*.traineddata`` files in its ``tessdata`` directory) for English, the
+``eng.traineddata`` file. Some installations ship it separately (e.g. as a ``tesseract-ocr-eng`` package on Linux distributions); ``tesseract --list-langs``
+should list ``eng``.
+
+Tesseract has two recognition engines: the newer LSTM-based one (used by default) and the "legacy" one, which shows slightly better performance for MRZ
+text detection according to our tests and can be enabled with ``mrz --legacy`` or ``extra_cmdline_params='--oem 0'`` (see below). Many installations
+(e.g. the Windows installer, or the Debian/Ubuntu ``tesseract-ocr`` packages) only include the smaller ``eng.traineddata`` without the legacy
+model, in which case requesting the legacy engine fails with an error like *"Tesseract (legacy) engine requested, but components are not present"*.
+To get it, download the full ``eng.traineddata`` from the `tessdata repository <https://github.com/tesseract-ocr/tessdata>`_ and either replace the
+file that came with your installation, or put it into a separate directory and point the ``TESSDATA_PREFIX`` environment variable to that directory.
+The test suite uses the legacy engine, so you need the full model to run it.
 
 PassportEye requires Python version 3.6 or higher.
 
@@ -110,7 +118,8 @@ of sample images: this is useful if you want to see the effects of changes to th
 
     $ evaluate_mrz -j 4
 
-(where ``-j 4`` would request to use 4 cores in parallel). The same script may be used to run the recognition pipeline on a 
+at the root of the source checkout (where ``-j 4`` would request to use 4 cores in parallel). The sample images (``passporteye/mrz/testdata``)
+are only available in the repository and are not included in the installed package. The same script may be used to run the recognition pipeline on a 
 given directory of images, sorting successes and failures, see ``evaluate_mrz -h`` for options.
 
 
