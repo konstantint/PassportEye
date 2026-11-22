@@ -4,6 +4,8 @@ Changelog
         - Fixed: Loader used skimage.io.imread(..., plugin=...), whose plugin infrastructure scikit-image
           deprecated in 0.25 (FutureWarning) and removes in 0.27. Images are now read with imageio.v3 (and
           matplotlib as before for the fallback) directly, with identical results. Requires imageio >= 2.22.0.
+        - Removed the use of the deprecated pkg_resources API (in evaluate_mrz and in the tests), which is
+          missing from Python 3.12+ environments without setuptools.
         - Issue#64: Support for the pre-2021 French national ID card (2 x 36 characters, national layout).
           Such MRZs used to be misdetected as TD2 and parsed (and OCR-"corrected") incorrectly. They are now
           recognized by the 'IDFRA' prefix and reported with mrz_type 'FRA_ID'.

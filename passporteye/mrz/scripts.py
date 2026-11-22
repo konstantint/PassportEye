@@ -15,7 +15,6 @@ import shutil
 import sys
 import time
 from collections import Counter
-import pkg_resources
 from skimage import io
 import numpy as np
 from pytesseract.pytesseract import TesseractNotFoundError, TesseractError
@@ -43,7 +42,7 @@ def evaluate_mrz():
     """
     parser = argparse.ArgumentParser(description='Run the MRZ OCR recognition algorithm on the sample test data, reporting the quality summary.')
     parser.add_argument('-j', '--jobs', default=1, type=int, help='Number of parallel jobs to run')
-    parser.add_argument('-dd', '--data-dir', default=pkg_resources.resource_filename('passporteye.mrz', 'testdata'),
+    parser.add_argument('-dd', '--data-dir', default=os.path.join(os.path.dirname(os.path.abspath(__file__)), 'testdata'),
                         help='Read files from this directory instead of the package test files')
     parser.add_argument('-sd', '--success-dir', default=None,
                         help='Copy files with successful (nonzero score) extraction results to this directory')

@@ -6,15 +6,17 @@ Read more here: http://pytest.org/
 Author: Konstantin Tretyakov
 License: MIT
 '''
-from pkg_resources import resource_filename
+import os
 import numpy as np
 from skimage.io import imread
 from passporteye.util.ocr import ocr
 
+DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data')
+
 
 # Smoke test for Tesseract OCR
 def test_ocr():
-    ocr_file = lambda fn, mode: ocr(imread(resource_filename('tests', 'data/%s' % fn)), mode)
+    ocr_file = lambda fn, mode: ocr(imread(os.path.join(DATA_DIR, fn)), mode)
 
     s = ocr_file('tesseract-test1.jpg', False)
     assert s.startswith('The (quick) [brown] {fox} jumps!\nOver the $43,456.78 <lazy> #90 dog\n')
