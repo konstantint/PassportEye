@@ -9,6 +9,10 @@ License: MIT
 from collections import OrderedDict
 from datetime import datetime
 
+# Typical OCR digit-for-letter confusions, used to fix characters at positions that must be alphabetic
+_OCR_TO_ALPHA_MAP = {'0': 'O', '1': 'I', '2': 'Z', '4': 'A', '5': 'S', '6': 'G', '8': 'B'}
+_OCR_TO_ALPHA = str.maketrans(_OCR_TO_ALPHA_MAP)
+
 
 class MRZ(object):
     """
@@ -21,7 +25,8 @@ class MRZ(object):
         Represent the MRZ as a list of 2 or 3 lines, create an instance of this class,
         and read off the various fields filled by the parser.
         The first field you should check is .mrz_type.
-        It is either None (no parsing done at all) or 'TD1', 'TD2', 'TD3', 'MRVA' or 'MRVB' depending on the type of the MRZ.
+        It is either None (no parsing done at all) or 'TD1', 'TD2', 'TD3', 'MRVA', 'MRVB' or 'FRA_ID' depending on the type of the MRZ.
+        'FRA_ID' is the national (non-ICAO) 2x36 layout of French identity cards issued 1994-2021.
         The next one is 'valid'. If this is true, you may be pretty sure the parsing was successful and
         all the checksum digits passed the test as well. Sometimes the validity check may fail for some trivial reason
         (e.g. nonstandard document type character or one of the checksums wrong while others corect) -
@@ -35,7 +40,7 @@ class MRZ(object):
 
         The parsing computes three validation indicators:
             valid_check_digits - a list of booleans indicating which of the "check digits" in the MRZ were valid.
-                                TD1/TD2 has four check digits, TD3 - five, MRVA/B - three.
+                                TD1/TD2 has four check digits, TD3 - five, MRVA/B and FRA_ID - three.
                                 The separate booleans are also available as valid_number, valid_date_of_birth, valid_expiration_date, valid_composite
                                 and valid_personal_number (TD3 only).
             valid_line_lengths - a list of booleans, indicating which of the lines (3 in TD1, 2 in TD2/TD3) had the expected length.
@@ -47,6 +52,8 @@ class MRZ(object):
         The reported fields are: type, country, number, date_of_birth, sex, expiration_date, nationality, names, surname
         TD1 MRZ also has fields optional1 and optional2. TD2 MRZ has optional1, TD3 MRZ has personal_number.
         MRVA and MRVB are the same as TD3 except personal_number and check_composite (which are not present)
+        FRA_ID has optional1 (the administrative code at the end of line 1) and no expiration date or nationality
+        (expiration_date, nationality and check_expiration_date are set to '', valid_expiration_date to None).
 
         The field aux is a dictionary of additional data that may be associated with MRZ by OCR code,
         e.g. aux['roi'], aux['box'] or aux['raw_text'] may be used to carry around the part of the image that was used
@@ -85,6 +92,17 @@ class MRZ(object):
     >>> assert m.names == 'JOANNA' and m.surname == 'KOWALSKA KWIATKOWSKA'
     >>> assert m.check_number == '0' and m.check_date_of_birth == '4' and m.check_expiration_date == '4' and m.check_personal_number == '<' and m.check_composite == '4'
 
+    # French national ID card, 1994-2021 layout (synthetic example)
+    >>> m = MRZ(['IDFRADUPONT<DURAND<<<<<<<<<<<<752013', '1507752012349MARIE<<CLAIRE<8503150F9'])
+    >>> assert m.mrz_type == 'FRA_ID' and m.valid and m.valid_score == 100
+    >>> assert m.type == 'ID' and m.country == 'FRA' and m.number == '150775201234' and m.optional1 == '752013'
+    >>> assert m.date_of_birth == '850315' and m.sex == 'F' and m.expiration_date == '' and m.nationality == ''
+    >>> assert m.names == 'MARIE CLAIRE' and m.surname == 'DUPONT DURAND'
+    >>> assert m.check_number == '9' and m.check_date_of_birth == '0' and m.check_composite == '9'
+    >>> assert m.valid_check_digits == [True, True, True]
+    >>> m = MRZ.from_ocr('\\n 1DFRADUP0NT<DURAND<<<<<<<<<<<<752013 \\n 15O7752012349MAR1E<<CLAIRE<85O3150F9 \\n')
+    >>> assert m.mrz_type == 'FRA_ID' and m.valid and m.number == '150775201234' and m.names == 'MARIE CLAIRE'
+
     # Invalid examples
     >>> assert MRZ([]).mrz_type is None
     >>> assert MRZ([1,2,3,4]).mrz_type is None
@@ -105,7 +123,7 @@ class MRZ(object):
 
     def __init__(self, mrz_lines):
         """
-        Parse a TD1/TD2/TD3/MRVA/MRVB MRZ from a single newline-separated string or a list of strings.
+        Parse a TD1/TD2/TD3/MRVA/MRVB/FRA_ID MRZ from a single newline-separated string or a list of strings.
 
         :param mrz_lines: either a single string with newlines, or a list of 2 or 3 strings, representing the lines of an MRZ.
         :return: self
@@ -131,8 +149,9 @@ class MRZ(object):
 
     @staticmethod
     def _guess_type(mrz_lines):
-        """Guesses the type of the MRZ from given lines. Returns 'TD1', 'TD2', 'TD3', 'MRVA', 'MRVB' or None.
+        """Guesses the type of the MRZ from given lines. Returns 'TD1', 'TD2', 'TD3', 'MRVA', 'MRVB', 'FRA_ID' or None.
         The algorithm is basically just counting lines, looking at their length and checking whether the first character is a 'V'
+        (or, for two short lines, whether the first line starts with 'IDFRA')
 
         >>> MRZ._guess_type([]) is None
         True
@@ -150,11 +169,17 @@ class MRZ(object):
         'MRVA'
         >>> MRZ._guess_type(['V'*36, '*'*36])
         'MRVB'
+        >>> MRZ._guess_type(['IDFRA' + '<'*31, '*'*36])
+        'FRA_ID'
+        >>> MRZ._guess_type(['1DFRA' + '<'*31, '*'*36])  # Tolerates typical OCR confusions in the prefix
+        'FRA_ID'
         """
         try:
             if len(mrz_lines) == 3:
                 return 'TD1'
             elif len(mrz_lines) == 2 and len(mrz_lines[0]) < 40 and len(mrz_lines[1]) < 40:
+                if mrz_lines[0][:5].upper().translate(_OCR_TO_ALPHA) == 'IDFRA':
+                    return 'FRA_ID'
                 return 'MRVB' if mrz_lines[0][0].upper() == 'V' else 'TD2'
             elif len(mrz_lines) == 2:
                 return 'MRVA' if mrz_lines[0][0].upper() == 'V' else 'TD3'
@@ -176,6 +201,8 @@ class MRZ(object):
                 self.valid = self._parse_mrv(*mrz_lines, length=44)
             elif self.mrz_type == 'MRVB':
                 self.valid = self._parse_mrv(*mrz_lines, length=36)
+            elif self.mrz_type == 'FRA_ID':
+                self.valid = self._parse_fra_id(*mrz_lines)
             else:
                 self.valid = False
                 self.valid_score = 0
@@ -210,24 +237,26 @@ class MRZ(object):
             if self.mrz_type == 'TD1':
                 result['optional1'] = self.optional1
                 result['optional2'] = self.optional2
-            elif self.mrz_type in ['TD2', 'MRVA', 'MRVB']:
+            elif self.mrz_type in ['TD2', 'MRVA', 'MRVB', 'FRA_ID']:
                 result['optional1'] = self.optional1
             else:
                 result['personal_number'] = self.personal_number
             result['check_number'] = self.check_number
             result['check_date_of_birth'] = self.check_date_of_birth
-            result['check_expiration_date'] = self.check_expiration_date
+            if self.mrz_type != 'FRA_ID':
+                result['check_expiration_date'] = self.check_expiration_date
             if self.mrz_type not in ['MRVA', 'MRVB']:
                 result['check_composite'] = self.check_composite
             if self.mrz_type == 'TD3':
                 result['check_personal_number'] = self.check_personal_number
-            result['valid_number'] = self.valid_check_digits[0]
-            result['valid_date_of_birth'] = self.valid_check_digits[1]
-            result['valid_expiration_date'] = self.valid_check_digits[2]
+            result['valid_number'] = self.valid_number
+            result['valid_date_of_birth'] = self.valid_date_of_birth
+            if self.mrz_type != 'FRA_ID':
+                result['valid_expiration_date'] = self.valid_expiration_date
             if self.mrz_type not in ['MRVA', 'MRVB']:
-                result['valid_composite'] = self.valid_check_digits[3]
+                result['valid_composite'] = self.valid_composite
             if self.mrz_type == 'TD3':
-                result['valid_personal_number'] = self.valid_check_digits[4]
+                result['valid_personal_number'] = self.valid_personal_number
             if 'method' in self.aux:
                 result['method'] = self.aux['method']
         return result
@@ -354,6 +383,47 @@ class MRZ(object):
         self.valid_score = 100*self.valid_score//(50+2+1+1)
         return self.valid_score == 100
 
+    def _parse_fra_id(self, a, b):
+        """French national identity card issued 1994-2021 (2 x 36 characters, national, non-ICAO layout).
+        Cards issued since 2021 use the standard TD1 layout and are parsed as TD1.
+
+        Line 1: 'ID', 'FRA', surname (25), administrative code (6).
+        Line 2: card number (12: issue YYMM, department/office code (3), sequence (5)), check digit,
+                given names (14), date of birth, check digit, sex, composite check digit over line 1 + line 2[0:35].
+        There is no expiration date or nationality field in this MRZ, these are set to ''.
+        """
+        len_a, len_b = len(a), len(b)
+        if len(a) < 36:
+            a = a + '<'*(36 - len(a))
+        if len(b) < 36:
+            b = b + '<'*(36 - len(b))
+        self.type = a[0:2]
+        self.country = a[2:5]
+        self.surname = a[5:30].replace('<', ' ').strip()
+        self.optional1 = a[30:36]  # Administrative code (department + office)
+        self.number = b[0:12]
+        self.check_number = b[12]
+        self.names = ' '.join(b[13:27].replace('<', ' ').split())
+        self.date_of_birth = b[27:33]
+        self.check_date_of_birth = b[33]
+        self.sex = b[34]
+        self.check_composite = b[35]
+        self.expiration_date = ''
+        self.check_expiration_date = ''
+        self.nationality = ''
+        self.valid_number = MRZCheckDigit.compute(self.number) == self.check_number
+        self.valid_date_of_birth = MRZCheckDigit.compute(self.date_of_birth) == self.check_date_of_birth and MRZ._check_date(self.date_of_birth)
+        self.valid_expiration_date = None
+        self.valid_composite = MRZCheckDigit.compute(a[0:36] + b[0:35]) == self.check_composite
+        self.valid_check_digits = [self.valid_number,
+                                   self.valid_date_of_birth,
+                                   self.valid_composite]
+        self.valid_line_lengths = [len_a == 36, len_b == 36]
+        self.valid_misc = [a[0:5] == 'IDFRA']
+        self.valid_score = 10*sum(self.valid_check_digits) + sum(self.valid_line_lengths) + sum(self.valid_misc) + 1
+        self.valid_score = 100*self.valid_score//(30+2+1+1)
+        return self.valid_score == 100
+
     @staticmethod
     def _check_date(ymd):
         try:
@@ -425,10 +495,12 @@ class MRZOCRCleaner(object):
                '*'*9 + 'n' + 'A'*3 + 'n'*7 + 'A' + 'n'*7 + '*'*14 + 'n'*2]
         MRV = ['a' + 'A'*43,
                '*'*9 + 'n' + 'A'*3 + 'n'*7 + 'A' + 'n'*7 + '*'*16]
-        self.FORMAT = {'TD1': TD1, 'TD2': TD2, 'TD3': TD3, 'MRVA': MRV, 'MRVB': MRV}
+        FRA_ID = ['a'*5 + 'A'*25 + '*'*6,
+                  'n'*4 + '*'*3 + 'n'*5 + 'n' + 'A'*14 + 'n'*7 + 'A' + 'n']
+        self.FORMAT = {'TD1': TD1, 'TD2': TD2, 'TD3': TD3, 'MRVA': MRV, 'MRVB': MRV, 'FRA_ID': FRA_ID}
 
         # Fixers
-        a = {'0': 'O', '1': 'I', '2': 'Z', '4': 'A', '5': 'S', '6': 'G', '8': 'B'}
+        a = _OCR_TO_ALPHA_MAP
         n = {'B': '8', 'C': '0', 'D': '0', 'G': '6', 'I': '1', 'O': '0', 'Q': '0', 'S': '5', 'Z': '2'}
         self.FIXERS = {'a': a, 'A': a, 'n': n, 'N': n, '*': {}}
 
