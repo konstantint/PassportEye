@@ -1,6 +1,10 @@
 Changelog
 ---------
     - (Unreleased)
+        - Issue#71, Issue#73: Replaced the abandoned pdfminer dependency with the
+          maintained pdfminer.six fork. Both occupy the same import namespace and
+          expose the same API, so no code changes were needed.
+        - Removed a duplicate imageio entry from install_requires.
         - Fixed: BooneTransform used morphology.square(), which scikit-image
           deprecated in 0.25 (FutureWarning) and will remove entirely in 0.27,
           which would make read_mrz() raise AttributeError on any environment
