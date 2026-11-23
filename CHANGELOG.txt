@@ -1,6 +1,6 @@
 Changelog
 ---------
-    - (Unreleased)
+    - (2.3.1)
         - Issue#38: read_mrz (and MRZPipeline) now also accept the image itself as a numpy array (e.g. an OpenCV frame
           converted to RGB, see README) or a PIL Image, image file contents as bytearray/memoryview or as an encoded uint8
           array (e.g. the output of cv2.imencode), and pathlib.Path filenames.
